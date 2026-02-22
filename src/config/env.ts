@@ -1,0 +1,24 @@
+//Archivo que lee las variables del .env y las exporta tipadas 
+import dotenv from 'dotenv'
+
+dotenv.config();
+
+export const env = {
+    //Server
+    PORT: parseInt(process.env.PORT || '3000', 10),
+    NODE_ENV: process.env.NODE_ENV || 'development',
+    ALLOWED_ORIGINS: (process.env.ALLOWED_ORIGINS || '').split(','),
+
+    //Database
+    DB_HOST: process.env.DB_HOST || 'localhost',
+    DB_PORT: parseInt(process.env.DB_PORT || '5432', 10),
+    BD_NAME: process.env.DB_NAME || 'logistock-db',
+    DB_USER: process.env.DB_USER || 'postgres',
+    DB_PASSWORD: process.env.DB_PASSWORD || '',
+
+    //JWT
+    JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET || '',
+    JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || '',
+    JWT_ACCESS_EXPIRY: process.env.JWT_ACCESS_EXPIRY,
+}
+
