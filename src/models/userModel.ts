@@ -1,0 +1,130 @@
+/**
+ * Modelo Sequelize para la tabla "users". Representa a cualquier usuario del sistema independientemente de su rol.
+ */
+
+import { DataTypes, Model} from "sequelize";
+import sequelize from "../config/database.js";
+import {IUser, IUserAttributes, IUserCreationAttributes} from "../interfaces/interfaces.js";
+
+class User extends Model<IUserAttributes, IUserCreationAttributes> implements IUser{
+    declare id: number;
+    declare roleId: number;
+    declare firstName: string;
+    declare lastName: string;
+    declare phone: string | null;
+    declare email: string;
+    declare password: string;
+    declare isActive: boolean;
+    declare isVerified: boolean;
+    declare lastLogin: Date | null;
+    declare readonly createdAt: Date;
+    declare readonly updatedAt: Date;
+
+    //Método para obtener el nombre completo del usuario -> user.getFullName()
+    getFullName(): string {
+        return `${this.firstName} ${this.lastName}`;
+    }
+}
+
+// Iniciamos el modelo con sus atributos y opciones
+User.init(
+    {
+        id:{
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true,
+        },
+        roleId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'roles', // Nombre de la tabla referenciada
+                key: 'id',     // Columna referenciada
+            },
+            comment: 'ID del rol asignado al usuario',
+        },
+        firstName: {
+            type: DataTypes.STRING(70),
+            allowNull: false,
+            comment: 'Nombre del usuario',
+        },
+        lastName:{
+            type: DataTypes.STRING(70),
+            allowNull: false,
+            comment: 'Apellido del usuario',
+        },
+        phone: {
+            type: DataTypes.STRING(20),
+            allowNull: true,
+            defaultValue: null,
+            comment: 'Número de teléfono del usuario (opcional)',
+        },
+        email: {
+            type: DataTypes.STRING(100),
+            allowNull: false,
+            unique: true, // Cada email debe ser único en la tabla
+            validate:{
+                isEmail: true,
+            },
+            comment: 'Correo electrónico del usuario, debe ser único',
+        },
+        password: {
+            type: DataTypes.STRING(255),
+            allowNull: false,
+            validate:{
+                len: [8, 255], // La contraseña debe tener al menos 8 caracteres
+                isStrong(value: string){
+                    if(!/[A-Z]/.test(value)){
+                        throw new Error("La contraseña debe contener al menos una mayúscula");
+                    }
+                    if(!/[0-9]/.test(value)){
+                        throw new Error("La contraseña debe contener al menos un número");
+                    }
+                }
+            },
+            comment: 'Contraseña del usuario, se recomienda almacenar el hash',
+        },
+        // Indica si la cuenta eestá habilitada o deshabilitada por el admin.
+        isActive: { 
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: true,
+            comment: 'Si la cuenta está activa. False = cuenta desactivada por admin',
+        },
+        // Indica si el usuario ha verificado su email. Un usuario no verificado no puede iniciar sesión.
+        isVerified:{
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
+            comment: 'Si el usuario ha verificado su email. Un usuario no verificado no puede iniciar sesión',
+        },
+        // Util para detectar cuentas inactivas o para mostrar la última vez que el usuario inició sesión en su perfil.
+        lastLogin: {
+            type: DataTypes.DATE,
+            allowNull: true,
+            defaultValue: null,
+            comment: 'Fecha y hora del último inicio de sesión del usuario',
+        },
+    },
+    {
+        sequelize,
+        modelName: 'User',
+        tableName: 'users',
+        timestamps: true, // createdAt y updatedAt se gestionan automáticamente
+        underscored: true, // usa snake_case para los nombres de columnas
+        comment: 'Tabla que almacena la información de los usuarios del sistema',
+
+        // indices para optimizar consultas frecuentes
+        indexes:[
+            {
+                unique: true,
+                fields: ['email'], // Índice único para el email
+            },
+            {
+                fields: ['role_id'], // Índice para consultas por rol
+            },
+        ],
+    }
+);
+
+export default User;
