@@ -47,6 +47,10 @@ Role.init(
         timestamps: true,   // Agrega createdAt y updatedAt automáticamente
         underscored: true,  // Usa snake_case para los nombres de columnas
         comment: 'Tabla que define los roles de usuario en el sistema',
+        // unique se define aquí para evitar SQL inválido en PostgreSQL con ENUM + alter:true
+        indexes: [
+            { unique: true, fields: ['name'] }
+        ],
     }
 );
 

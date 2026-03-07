@@ -122,4 +122,3 @@ export interface ILoginAttemptCreationAttributes extends Optional<ILoginAttemptA
 
 // Interface final del modelo LoginAttempt
 export interface ILoginAttempt extends Model<ILoginAttemptAttributes, ILoginAttemptCreationAttributes>, ILoginAttemptAttributes{}
-

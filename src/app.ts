@@ -17,9 +17,8 @@ const startServer = async () => {
         await sequelize.authenticate();
         console.log('DB conectada');
         
-        await sequelize.sync({
-            alter: env.NODE_ENV === 'development'
-        })
+        
+        await sequelize.sync();
         console.log('Tablas sincronizadas');
 
         app.listen(env.PORT, () => {
