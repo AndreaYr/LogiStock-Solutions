@@ -31,7 +31,6 @@ export const env = {
     // EMAIL (Resend)
     RESEND_API_KEY: process.env.RESEND_API_KEY || '',
     RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || 'LogiStock <noreply@logistock.com>',
-    APP_URL: process.env.APP_URL || 'http://localhost:3000',
 
 }
 

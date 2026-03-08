@@ -4,10 +4,16 @@ import sequelize from './config/database.js';
 import './models/index.js';
 import apiRoutes from './routes/index.js';
 
+import { securityHeaders, corsConfig, rateLimiter } from './middlewares/securityMiddleware.js';
+
 // Crear la app de express
 const app = express();
 
 // Middlewares globales
+app.use(securityHeaders);
+app.use(corsConfig);
+app.use('/api', rateLimiter); // Limitar peticiones a las rutas de la API
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -21,11 +27,11 @@ app.get('/health', (_req, res) => {
 
 // conecta a la base de datos y luego inicia el servidor
 const startServer = async () => {
-    try{
+    try {
         await sequelize.authenticate();
         console.log('DB conectada');
-        
-        
+
+
         await sequelize.sync();
         console.log('Tablas sincronizadas');
 
