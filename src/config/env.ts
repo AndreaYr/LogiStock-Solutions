@@ -20,5 +20,12 @@ export const env = {
     JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET || '',
     JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || '',
     JWT_ACCESS_EXPIRY: process.env.JWT_ACCESS_EXPIRY,
+
+    // PASARELA DE PAGO
+    WOMPI_PUBLIC_KEY: process.env.WOMPI_PUBLIC_KEY || 'pub_test_KNdmFPNZq1JjKmVmpJkABrX1mYujfHG1',
+    WOMPI_PRIVATE_KEY: process.env.WOMPI_PRIVATE_KEY || 'prv_test_nxW2ZTxSxST2Ml1tlt20BXPlC2VbyAwO',
+    WOMPI_INTEGRITY_SECRET: process.env.WOMPI_INTEGRITY_SECRET || '',   // Secreto de integridad (Wompi dashboard → Desarrolladores)
+    WOMPI_EVENTS_SECRET: process.env.WOMPI_EVENTS_SECRET || '',         // Secreto de eventos para verificar webhooks
+    
 }
 
