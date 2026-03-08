@@ -1,4 +1,4 @@
-//Archivo que lee las variables del .env y las exporta tipadas 
+//Archivo que lee las variables del .env y las exporta tipadas
 import dotenv from 'dotenv'
 
 dotenv.config();
@@ -8,11 +8,12 @@ export const env = {
     PORT: parseInt(process.env.PORT || '3000', 10),
     NODE_ENV: process.env.NODE_ENV || 'development',
     ALLOWED_ORIGINS: (process.env.ALLOWED_ORIGINS || '').split(','),
+    APP_URL: process.env.APP_URL || 'http://localhost:3000',
 
     //Database
     DB_HOST: process.env.DB_HOST || 'localhost',
     DB_PORT: parseInt(process.env.DB_PORT || '5432', 10),
-    BD_NAME: process.env.DB_NAME || 'logistock-db',
+    DB_NAME: process.env.DB_NAME || 'logistock-db',
     DB_USER: process.env.DB_USER || 'postgres',
     DB_PASSWORD: process.env.DB_PASSWORD || '',
 
@@ -31,6 +32,6 @@ export const env = {
     RESEND_API_KEY: process.env.RESEND_API_KEY || '',
     RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || 'LogiStock <noreply@logistock.com>',
     APP_URL: process.env.APP_URL || 'http://localhost:3000',
-    
+
 }
 

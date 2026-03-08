@@ -8,7 +8,7 @@
  * 2. Consultar intentos fallidos recientes para decidir si bloquear
  * 3. Contar intentos fallidos para comparar con MAX_LOGIN_ATTEMPTS 
  */
-import {LOCK, Op} from 'sequelize';
+import { Op } from 'sequelize';
 import { BaseRepository } from "./baseRepositories.js";
 import LoginAttempt from "../models/loginAttemptModel.js";
 import { ILoginAttemptCreationAttributes } from '../interfaces/interfaces.js';

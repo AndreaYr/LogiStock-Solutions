@@ -13,13 +13,13 @@ import LoginAttempt from "../models/loginAttemptModel.js";
 const MAX_LOGIN_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS || '5', 10);
 const LOCK_TIME_MINUTES = parseInt(process.env.LOCK_TIME_MINUTES || '15', 10);
 
-export class UserRepository extends BaseRepository<User>{
+export class UserRepository extends BaseRepository<User> {
     constructor() {
         super(User);
     }
 
     // Busca un usuario por su email
-    async findByEmail(email: string): Promise<User | null>{
+    async findByEmail(email: string): Promise<User | null> {
         return await this.model.findOne({ where: { email } });
     }
 
@@ -32,7 +32,7 @@ export class UserRepository extends BaseRepository<User>{
     * @param providerId - El ID único del proveedor (ej: Azure AD object ID) 
     */
 
-    async findByProviderId(providerId: string): Promise<User | null>{
+    async findByProviderId(providerId: string): Promise<User | null> {
         return null;
     }
 
@@ -41,12 +41,12 @@ export class UserRepository extends BaseRepository<User>{
      * Se usa para decidir si bloquear la cuenta:
      * - Si retorna >= MAX_LOGIN_ATTEMPTS → llamar a lockAccount()
      */
-    async incrementFailedAttempts(userId: number): Promise<number>{
+    async incrementFailedAttempts(userId: number): Promise<number> {
         //ventana de tiempo: ahora menos LOCK_TIME_MINUTES
         const since = new Date(Date.now() - LOCK_TIME_MINUTES * 60 * 1000);
 
         const count = await LoginAttempt.count({
-            where:{
+            where: {
                 userId,
                 success: false,
                 attemptedAt: { [Op.gte]: since },
@@ -55,22 +55,22 @@ export class UserRepository extends BaseRepository<User>{
 
         return count;
     }
-          
+
     // Reactiva la cuenta del usuario, se llama cuando el usuario hace login exitoso.
-    async resetFailedAttempts(userId: number): Promise<void>{
+    async resetFailedAttempts(userId: number): Promise<void> {
         await this.model.update(
-            {isActive: true},
-            {where: {id: userId}}
+            { isActive: true },
+            { where: { id: userId } }
         );
     }
 
     /**Bloquea la cuenta del usuario poniendo isActive = false
      * Se llama cuando los intentos fallido superan el MAX_LOGIN_ATTEMPTS
      */
-    async lockAccount(userId: number): Promise<void>{
+    async lockAccount(userId: number): Promise<void> {
         await this.model.update(
-            {isActive: false},
-            {where: {id: userId}}
+            { isActive: false },
+            { where: { id: userId } }
         );
     }
 }
