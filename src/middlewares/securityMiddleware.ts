@@ -1,13 +1,14 @@
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
+import { env } from '../config/env.js';
 
 // Configuración de Helmet para Security Headers
 export const securityHeaders = helmet();
 
 // Configuración de CORS
 export const corsConfig = cors({
-    origin: process.env.CORS_ORIGIN || '*', // Reemplazar con el origen del frontend en producción
+    origin: env.ALLOWED_ORIGINS, // Utiliza orígenes definidos en el .env
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
