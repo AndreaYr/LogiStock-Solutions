@@ -10,7 +10,8 @@
 
 import { createHash } from 'crypto';
 import { env } from '../config/env.js';
-import type { IWompiSignatureRequest, IWompiSignatureResponse, IWompiTransaction } from '../interfaces/wompiInterfaces.js';
+import paymentTransactionRepo from '../repositories/paymentTransactionRepositories.js';
+import type { IWompiSignatureRequest, IWompiSignatureResponse, IWompiTransaction, IWompiWebhookEvent } from '../interfaces/wompiInterfaces.js';
 
 const WOMPI_API_BASE = 'https://production.wompi.co/v1';
 const WOMPI_SANDBOX_BASE = 'https://sandbox.wompi.co/v1';
@@ -86,6 +87,33 @@ class WompiService {
 
         const body = await response.json() as { data: IWompiTransaction };
         return body.data;
+    }
+
+    /**
+     * Persiste o actualiza una transacción de Wompi recibida por webhook.
+     * Usa upsert por wompiId para manejar eventos duplicados de forma segura.
+     *
+     * @param tx  Datos de la transacción del webhook
+     * @param env Entorno del evento ('prod' | 'test')
+     * @param raw Payload completo del evento para auditoría
+     */
+    async persistTransaction(
+        tx: IWompiTransaction,
+        environment: 'prod' | 'test',
+        raw: object
+    ) {
+        return paymentTransactionRepo.upsert({
+            wompiId:           tx.id,
+            reference:         tx.reference,
+            status:            tx.status,
+            amountInCents:     tx.amount_in_cents,
+            currency:          tx.currency,
+            paymentMethodType: tx.payment_method_type,
+            statusMessage:     tx.status_message,
+            environment,
+            finalizedAt:       tx.finalized_at ? new Date(tx.finalized_at) : null,
+            rawPayload:        raw,
+        });
     }
 }
 

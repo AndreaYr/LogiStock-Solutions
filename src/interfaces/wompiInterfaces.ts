@@ -61,3 +61,25 @@ export interface IWompiTransaction {
     taxes: unknown[];
     tip_in_cents: number | null;
 }
+
+// ─── Modelo de BD para persistir transacciones ───────────────────────────────
+
+/** Atributos de la tabla 'payment_transactions' */
+export interface IPaymentTransactionAttributes {
+    id: number;
+    wompiId: string;            // ID único de la transacción en Wompi
+    reference: string;          // Referencia de la orden
+    status: 'PENDING' | 'APPROVED' | 'DECLINED' | 'VOIDED' | 'ERROR';
+    amountInCents: number;
+    currency: string;
+    paymentMethodType: string;
+    statusMessage: string | null;
+    environment: 'prod' | 'test';
+    finalizedAt: Date | null;
+    rawPayload: object;         // Payload completo del webhook para auditoría
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
+export interface IPaymentTransactionCreationAttributes
+    extends Omit<IPaymentTransactionAttributes, 'id' | 'createdAt' | 'updatedAt'> {}

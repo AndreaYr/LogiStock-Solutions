@@ -54,7 +54,7 @@ export class BaseRepository<M extends Model> {
         data: Partial<Attributes<M>>
     ): Promise<[affectedCount: number]> {
         return this.model.update(data as any, {
-            where: { id } as WhereOptions<Attributes<M>>,
+            where: { id } as unknown as WhereOptions<Attributes<M>>,
         });
     }
 
@@ -64,7 +64,7 @@ export class BaseRepository<M extends Model> {
      */
     async delete(id: number): Promise<number> {
         return this.model.destroy({
-            where: { id } as WhereOptions<Attributes<M>>,
+            where: { id } as unknown as WhereOptions<Attributes<M>>,
         });
     }
     

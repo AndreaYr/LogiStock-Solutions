@@ -2,6 +2,7 @@ import Role from "./roleModel.js";
 import User from "./userModel.js";
 import RefreshToken from "./refreshTokenModel.js";
 import LoginAttempt from "./loginAttemptModel.js";
+import PaymentTransaction from "./paymentTransactionModel.js";
 
 // -------------------- Role - User --------------------
 
@@ -51,4 +52,6 @@ LoginAttempt.belongsTo(User, {
     as: 'user'
 });
 
-export { Role, User, RefreshToken, LoginAttempt };
+// PaymentTransaction no tiene FK con otras tablas por diseño:
+// las transacciones de pago se identifican por 'reference' (orden externa)
+export { Role, User, RefreshToken, LoginAttempt, PaymentTransaction };

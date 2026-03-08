@@ -49,8 +49,8 @@ export class UserRepository extends BaseRepository<User>{
             where:{
                 userId,
                 success: false,
-                createdAt: { [Op.gte]: since },
-            },
+                attemptedAt: { [Op.gte]: since },
+            } as any,
         });
 
         return count;

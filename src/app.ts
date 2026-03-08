@@ -1,15 +1,23 @@
 import express from 'express';
 import { env } from './config/env.js';
 import sequelize from './config/database.js';
-import './models';
+import './models/index.js';
+import apiRoutes from './routes/index.js';
 
 // Crear la app de express
-const  app = express();
+const app = express();
 
-//Middleware para leer JSON
+// Middlewares globales
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-//Rutas
+// Rutas API
+app.use('/api', apiRoutes);
+
+// Health check
+app.get('/health', (_req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 // conecta a la base de datos y luego inicia el servidor
 const startServer = async () => {

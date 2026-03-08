@@ -24,8 +24,13 @@ export const env = {
     // PASARELA DE PAGO
     WOMPI_PUBLIC_KEY: process.env.WOMPI_PUBLIC_KEY || 'pub_test_KNdmFPNZq1JjKmVmpJkABrX1mYujfHG1',
     WOMPI_PRIVATE_KEY: process.env.WOMPI_PRIVATE_KEY || 'prv_test_nxW2ZTxSxST2Ml1tlt20BXPlC2VbyAwO',
-    WOMPI_INTEGRITY_SECRET: process.env.WOMPI_INTEGRITY_SECRET || '',   // Secreto de integridad (Wompi dashboard → Desarrolladores)
-    WOMPI_EVENTS_SECRET: process.env.WOMPI_EVENTS_SECRET || '',         // Secreto de eventos para verificar webhooks
+    WOMPI_INTEGRITY_SECRET: process.env.WOMPI_INTEGRITY_SECRET || 'test_integrity_7rpwUDeBhSd4ecYePRnNHXUY0YtLgEDa',
+    WOMPI_EVENTS_SECRET: process.env.WOMPI_EVENTS_SECRET || 'test_events_egodi8LzBEm4OorHa8d2YUegz6raZBYd',
+
+    // EMAIL (Resend)
+    RESEND_API_KEY: process.env.RESEND_API_KEY || '',
+    RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || 'LogiStock <noreply@logistock.com>',
+    APP_URL: process.env.APP_URL || 'http://localhost:3000',
     
 }
 

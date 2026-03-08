@@ -30,7 +30,7 @@ class TokenService {
         return jwt.sign(
             payload,
             env.JWT_ACCESS_SECRET,
-            {expiresIn: (env.JWT_ACCESS_EXPIRES_IN || '15m')} as jwt.SignOptions
+            {expiresIn: (env.JWT_ACCESS_EXPIRY || '15m')} as jwt.SignOptions
         );
     }
 
