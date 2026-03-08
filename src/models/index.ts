@@ -3,6 +3,7 @@ import User from "./userModel.js";
 import RefreshToken from "./refreshTokenModel.js";
 import LoginAttempt from "./loginAttemptModel.js";
 import PaymentTransaction from "./paymentTransactionModel.js";
+import Bodega from './bodegaModel.js';
 
 // -------------------- Role - User --------------------
 

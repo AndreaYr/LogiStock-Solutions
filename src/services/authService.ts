@@ -53,8 +53,8 @@ class AuthService {
         const existing = await userRepo.findByEmail(dto.email);
         if (existing) throw new Error('El email ya está registrado.');
 
-        const clientRole = await roleRepository.findByName(UserRole.CLIENT);
-        if (!clientRole) throw new Error('Rol CLIENT no encontrado. Ejecuta el seeder de roles.');
+        const clientRole = await roleRepository.findByName(UserRole.CLIENTE);
+        if (!clientRole) throw new Error('Rol CLIENTE no encontrado. Ejecuta el seeder de roles.');
 
         const hashed = await bcrypt.hash(dto.password, 12);
 
@@ -120,7 +120,7 @@ class AuthService {
         sendLoginAlertEmail(user.email, user.firstName, ipAddress, userAgent ?? null).catch(console.error);
 
         const role = await roleRepository.findById(user.roleId);
-        return this._issueTokens(user.id, user.roleId, role?.name ?? UserRole.CLIENT);
+        return this._issueTokens(user.id, user.roleId, role?.name ?? UserRole.CLIENTE);
     }
 
     /**
@@ -137,7 +137,7 @@ class AuthService {
         if (!user || !user.isActive) throw new Error('Usuario no encontrado o inactivo.');
 
         const role = await roleRepository.findById(user.roleId);
-        const accessToken = tokenService.generateAccessToken(user.id, user.roleId, role?.name ?? UserRole.CLIENT);
+        const accessToken = tokenService.generateAccessToken(user.id, user.roleId, role?.name ?? UserRole.CLIENTE);
         return { accessToken };
     }
 

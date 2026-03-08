@@ -14,11 +14,11 @@ import { Model, Optional } from "sequelize";
  * Este enum se usa para garantizar que solo existan estos 4 valores (roles) en la BD
  */
 
-export enum UserRole{
+export enum UserRole {
     ADMIN = 'admin',
-    WAREHOUSE_MANAGER = 'warehouse_manager',
-    OPERATOR = 'operator',
-    CLIENT = 'client',
+    JEFE_BODEGA = 'jefe de bodega',
+    AUXILIAR = 'auxiliar',
+    CLIENTE = 'cliente',
 }
 
 //------------------------------ INTERFACE ------------------------------
@@ -28,7 +28,7 @@ export enum UserRole{
  */
 
 // Atributos completos de la tabla 'roles', representa un rol en el sistema
-export interface IRoleAttributes{
+export interface IRoleAttributes {
     id: number;
     name: UserRole;                 // Nombre del rol (enum)
     description: string | null;     // Descripcion opcional del rol
@@ -37,10 +37,10 @@ export interface IRoleAttributes{
 }
 
 // Atributos opcionales al crear un rol. 'id' es opcional porque la BD lo genera automaticamente
-export interface IRoleCreationAttributes extends Optional<IRoleAttributes, 'id'>{}
+export interface IRoleCreationAttributes extends Optional<IRoleAttributes, 'id'> { }
 
 // Extiende Model para tener acceso a los métodos de Sequelize
-export interface IRole extends Model<IRoleAttributes, IRoleCreationAttributes>, IRoleAttributes{}
+export interface IRole extends Model<IRoleAttributes, IRoleCreationAttributes>, IRoleAttributes { }
 
 
 //-----------------------------------------------------------------------------
@@ -50,7 +50,7 @@ export interface IRole extends Model<IRoleAttributes, IRoleCreationAttributes>, 
  */
 
 // Atributos completos de la tabla 'users', representa cualquier usuario en el sistema
-export interface IUserAttributes{
+export interface IUserAttributes {
     id: number;
     roleId: number;         // FK -> roles.id
     firstName: string;
@@ -66,10 +66,10 @@ export interface IUserAttributes{
 }
 
 // Atributos opcionales al crear un User: id, phone, lastLogin
-export interface IUserCreationAttributes extends Optional<IUserAttributes, 'id' | 'phone' | 'lastLogin'> {}
+export interface IUserCreationAttributes extends Optional<IUserAttributes, 'id' | 'phone' | 'lastLogin'> { }
 
 // Interface final del modelo User
-export interface IUser extends Model<IUserAttributes, IUserCreationAttributes>, IUserAttributes{}
+export interface IUser extends Model<IUserAttributes, IUserCreationAttributes>, IUserAttributes { }
 
 //-----------------------------------------------------------------------------
 
@@ -78,7 +78,7 @@ export interface IUser extends Model<IUserAttributes, IUserCreationAttributes>, 
  */
 
 // Atributos completos de la tabla 'refresh_tokens', los refresh tokens permiten renovar el access token sin que el usuario tenga que volver a iniciar sesión
-export interface IRefreshTokenAttributes{
+export interface IRefreshTokenAttributes {
     id: number;
     userId: number;         // FK -> users.id
     token: string;          // El valor del refresh token
@@ -90,10 +90,10 @@ export interface IRefreshTokenAttributes{
 }
 
 // Atributos opcionales al crear un RefreshToken: id, ipAddress, userAgent
-export interface IRefreshTokenCreationAttributes extends Optional<IRefreshTokenAttributes, 'id' | 'ipAddress' | 'userAgent'> {}
+export interface IRefreshTokenCreationAttributes extends Optional<IRefreshTokenAttributes, 'id' | 'ipAddress' | 'userAgent'> { }
 
 // Interface final del modelo RefreshToken
-export interface IRefreshToken extends Model<IRefreshTokenAttributes, IRefreshTokenCreationAttributes>, IRefreshTokenAttributes{}
+export interface IRefreshToken extends Model<IRefreshTokenAttributes, IRefreshTokenCreationAttributes>, IRefreshTokenAttributes { }
 
 //-----------------------------------------------------------------------------
 
@@ -107,7 +107,7 @@ export interface IRefreshToken extends Model<IRefreshTokenAttributes, IRefreshTo
  * - Analizar patrones de acceso sospechosos
  * - Auditar accesos al sistema
  */
-export interface ILoginAttemptAttributes{
+export interface ILoginAttemptAttributes {
     id: number;
     userId: number | null;  // FK -> users.id es null si el email no existe en la BD
     email: string;          // El email que se intentó ingresar
@@ -118,7 +118,7 @@ export interface ILoginAttemptAttributes{
 }
 
 // Atributos opcionales al crear un LoginAttempt: id, userAgent
-export interface ILoginAttemptCreationAttributes extends Optional<ILoginAttemptAttributes, 'id' | 'userAgent'> {}
+export interface ILoginAttemptCreationAttributes extends Optional<ILoginAttemptAttributes, 'id' | 'userAgent'> { }
 
 // Interface final del modelo LoginAttempt
-export interface ILoginAttempt extends Model<ILoginAttemptAttributes, ILoginAttemptCreationAttributes>, ILoginAttemptAttributes{}
+export interface ILoginAttempt extends Model<ILoginAttemptAttributes, ILoginAttemptCreationAttributes>, ILoginAttemptAttributes { }

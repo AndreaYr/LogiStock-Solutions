@@ -37,12 +37,12 @@ describe('TokenService', () => {
 
     it('verifica un accessToken válido y retorna el payload correcto', async () => {
         const tokenService = await getTokenService();
-        const token = tokenService.generateAccessToken(42, 3, UserRole.CLIENT);
+        const token = tokenService.generateAccessToken(42, 3, UserRole.CLIENTE);
         const payload = tokenService.verifyAccessToken(token);
 
         expect(payload.userId).toBe(42);
         expect(payload.roleId).toBe(3);
-        expect(payload.role).toBe(UserRole.CLIENT);
+        expect(payload.role).toBe(UserRole.CLIENTE);
     });
 
     it('lanza error al verificar un token inválido', async () => {

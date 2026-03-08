@@ -1,6 +1,5 @@
 import { Sequelize } from "sequelize";
 import {env} from './env.js';
-
 const sequelize = new Sequelize({
     dialect: 'postgres',
     host: env.DB_HOST,
@@ -12,7 +11,12 @@ const sequelize = new Sequelize({
     define: {
         timestamps: true,
         underscored: true,
+    },
+    dialectOptions: {
+        ssl: {
+            require: true,
+            rejectUnauthorized: false
+        }
     }
 });
-
 export default sequelize;

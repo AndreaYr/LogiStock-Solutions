@@ -93,7 +93,7 @@ PaymentTransaction.init(
         tableName: 'payment_transactions',
         timestamps: true,
         indexes: [
-            { fields: ['wompiId'], unique: true },
+            { fields: ['wompi_id'], unique: true },
             { fields: ['reference'] },
             { fields: ['status'] },
         ],
