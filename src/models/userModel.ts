@@ -71,18 +71,7 @@ User.init(
         password: {
             type: DataTypes.STRING(255),
             allowNull: false,
-            validate:{
-                len: [8, 255], // La contraseña debe tener al menos 8 caracteres
-                isStrong(value: string){
-                    if(!/[A-Z]/.test(value)){
-                        throw new Error("La contraseña debe contener al menos una mayúscula");
-                    }
-                    if(!/[0-9]/.test(value)){
-                        throw new Error("La contraseña debe contener al menos un número");
-                    }
-                }
-            },
-            comment: 'Contraseña del usuario, se recomienda almacenar el hash',
+            comment: 'Hash bcrypt de la contraseña del usuario',
         },
         // Indica si la cuenta eestá habilitada o deshabilitada por el admin.
         isActive: { 

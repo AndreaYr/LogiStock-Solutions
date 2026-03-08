@@ -6,7 +6,7 @@
  * - Limpiar tokens expirados
  */
 
-import {Op, where} from 'sequelize';
+import {Op} from 'sequelize';
 import { BaseRepository } from "./baseRepositories.js";
 import RefreshToken from "../models/refreshTokenModel.js";
 
