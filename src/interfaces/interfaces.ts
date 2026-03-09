@@ -58,8 +58,6 @@ export interface IUserAttributes {
     phone: string | null;   // opcional
     email: string;
     password: string;
-    documentId: string | null; // Nuevo: Documento de identidad
-    address: string | null;    // Nuevo: Dirección
     isActive: boolean;      // Si la cuenta está activa o deshabilitada
     isVerified: boolean;    // Si el email fue verificado
     lastLogin: Date | null; // Ultima vez que inició sesión
@@ -68,7 +66,7 @@ export interface IUserAttributes {
 }
 
 // Atributos opcionales al crear un User: id, phone, lastLogin, documentId, address
-export interface IUserCreationAttributes extends Optional<IUserAttributes, 'id' | 'phone' | 'lastLogin' | 'documentId' | 'address'> { }
+export interface IUserCreationAttributes extends Optional<IUserAttributes, 'id' | 'phone' | 'lastLogin'> { }
 
 // Interface final del modelo User
 export interface IUser extends Model<IUserAttributes, IUserCreationAttributes>, IUserAttributes { }

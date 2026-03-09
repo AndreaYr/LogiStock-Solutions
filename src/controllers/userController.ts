@@ -58,8 +58,8 @@ export const UserController = {
                 return;
             }
 
-            const { firstName, lastName, phone, documentId, address } = req.body;
-            const updated = await userService.updateProfile(id, { firstName, lastName, phone, documentId, address });
+            const { firstName, lastName, phone } = req.body;
+            const updated = await userService.updateProfile(id, { firstName, lastName, phone });
             res.status(200).json({ message: 'Perfil actualizado.', user: updated });
         } catch (err: any) {
             const status = err.message.includes('no encontrado') ? 404 : 500;
