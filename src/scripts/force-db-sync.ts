@@ -17,6 +17,20 @@ async function forceSync() {
         await sequelize.query('ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "is_verified" BOOLEAN DEFAULT FALSE;');
         await sequelize.query('ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "last_login" TIMESTAMP WITH TIME ZONE;');
 
+        console.log('Añadiendo columnas faltantes a la tabla "warehouses"...');
+        await sequelize.query('ALTER TABLE "warehouses" ADD COLUMN IF NOT EXISTS "address" VARCHAR(255);');
+        await sequelize.query('ALTER TABLE "warehouses" ADD COLUMN IF NOT EXISTS "postal_code" VARCHAR(20);');
+        await sequelize.query('ALTER TABLE "warehouses" ADD COLUMN IF NOT EXISTS "storage_length" DECIMAL;');
+        await sequelize.query('ALTER TABLE "warehouses" ADD COLUMN IF NOT EXISTS "storage_width" DECIMAL;');
+        await sequelize.query('ALTER TABLE "warehouses" ADD COLUMN IF NOT EXISTS "storage_height" DECIMAL;');
+        await sequelize.query('ALTER TABLE "warehouses" ADD COLUMN IF NOT EXISTS "image_url" VARCHAR(255);');
+        await sequelize.query('ALTER TABLE "warehouses" ADD COLUMN IF NOT EXISTS "monthly_price" DECIMAL(10, 2) NOT NULL DEFAULT 0;');
+        await sequelize.query('ALTER TABLE "warehouses" ADD COLUMN IF NOT EXISTS "capacity_occupied" DECIMAL DEFAULT 0;');
+
+        console.log('Añadiendo columnas faltantes a la tabla "rentals"...');
+        await sequelize.query('ALTER TABLE "rentals" ADD COLUMN IF NOT EXISTS "monthly_amount" DECIMAL(10, 2);');
+        await sequelize.query('ALTER TABLE "rentals" ADD COLUMN IF NOT EXISTS "status" VARCHAR(50) DEFAULT \'ACTIVE\';');
+
         console.log('✅ Columnas añadidas (si no existían).');
 
         // Intentamos un sync normal (sin alter:true) solo para asegurar que otras tablas básicas existan
