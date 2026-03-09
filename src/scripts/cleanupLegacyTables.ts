@@ -1,57 +1,55 @@
 import sequelize from '../config/database.js';
 
 /**
- * Script temporal para eliminar las tablas antiguas en español.
- * Ejecutar con: npx tsx src/scripts/cleanupLegacyTables.ts
+ * Script de reversión para:
+ * 1. Asegurar que las tablas antiguas de español estén eliminadas.
+ * 2. Restaurar los nombres de los roles a ESPAÑOL (jefe de bodega, auxiliar, cliente).
+ * 
+ * Uso: npx tsx src/scripts/cleanupLegacyTables.ts
  */
-const cleanup = async () => {
+const revertRoles = async () => {
     try {
-        console.log('⏳ Iniciando limpieza de tablas antiguas...');
+        console.log('⏳ Iniciando restauración de roles a español...');
         await sequelize.authenticate();
+        console.log('✅ Conexión establecida.');
 
         const queryInterface = sequelize.getQueryInterface();
 
-        // Tablas a eliminar (en orden de dependencia si aplica)
-        const legacyTables = ['alquileres', 'bodegas'];
-
-        for (const table of legacyTables) {
+        // 1. Limpieza de tablas (por si acaso)
+        const tablesToDrop = ['alquileres', 'bodegas'];
+        for (const table of tablesToDrop) {
             try {
-                // Verificamos si la tabla existe antes de intentar borrarla
                 const tables = await queryInterface.showAllTables();
                 if (tables.includes(table)) {
                     await queryInterface.dropTable(table);
-                    console.log(`✅ Tabla '${table}' eliminada correctamente.`);
-                } else {
-                    console.log(`ℹ️ La tabla '${table}' no existe o ya fue eliminada.`);
+                    console.log(`✅ Tabla '${table}' eliminada.`);
                 }
-            } catch (err: any) {
-                console.warn(`⚠️ No se pudo eliminar '${table}': ${err.message}`);
-            }
+            } catch (e) { }
         }
 
-        console.log('🎉 Limpieza de tablas finalizada.');
-
-        console.log('⏳ Traduciendo roles existentes a inglés...');
-        const roleTranslations = [
-            { old: 'jefe de bodega', new: 'warehouse_manager' },
-            { old: 'auxiliar', new: 'assistant' },
-            { old: 'cliente', new: 'client' }
+        // 2. REVERTIR Roles a Español
+        console.log('⏳ Restaurando nombres de roles a español...');
+        const translations = [
+            { old: 'warehouse_manager', new: 'jefe de bodega' },
+            { old: 'assistant', new: 'auxiliar' },
+            { old: 'client', new: 'cliente' }
         ];
 
-        for (const trans of roleTranslations) {
+        for (const t of translations) {
             await sequelize.query(
                 `UPDATE roles SET name = :new WHERE name = :old`,
-                { replacements: { old: trans.old, new: trans.new } }
+                { replacements: { old: t.old, new: t.new } }
             );
-            console.log(`✅ Rol '${trans.old}' -> '${trans.new}' actualizado.`);
+            console.log(`✅ Rol restaurado: ${t.old} -> ${t.new}`);
         }
 
-        console.log('🎉 Todo el proceso de migración ha finalizado.');
+        console.log('🎉 Restauración completada con éxito.');
+        console.log('👉 Tip: Ahora ejecuta "npm run seed" en la EC2.');
         process.exit(0);
-    } catch (error) {
-        console.error('❌ Error de conexión:', error);
+    } catch (error: any) {
+        console.error('❌ Error durante la restauración:', error.message);
         process.exit(1);
     }
 };
 
-cleanup();
+revertRoles();

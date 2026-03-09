@@ -16,9 +16,9 @@ import { Model, Optional } from "sequelize";
 
 export enum UserRole {
     ADMIN = 'admin',
-    JEFE_BODEGA = 'warehouse_manager',
-    AUXILIAR = 'assistant',
-    CLIENTE = 'client',
+    JEFE_BODEGA = 'jefe de bodega',
+    AUXILIAR = 'auxiliar',
+    CLIENTE = 'cliente',
 }
 
 //------------------------------ INTERFACE ------------------------------

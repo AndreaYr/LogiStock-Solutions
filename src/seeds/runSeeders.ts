@@ -14,10 +14,10 @@ const seedDatabase = async () => {
 
         console.log('⏳ Seeding Roles...');
         const roles = [
-            { name: UserRole.ADMIN, description: 'LogiStock System Administrator' },
-            { name: UserRole.JEFE_BODEGA, description: 'Warehouse Manager' },
-            { name: UserRole.AUXILIAR, description: 'Warehouse Assistant' },
-            { name: UserRole.CLIENTE, description: 'Customer' },
+            { name: UserRole.ADMIN, description: 'Administrador del sistema LogiStock' },
+            { name: UserRole.JEFE_BODEGA, description: 'Jefe encargado de gestionar una bodega' },
+            { name: UserRole.AUXILIAR, description: 'Auxiliar de bodega para operaciones' },
+            { name: UserRole.CLIENTE, description: 'Cliente que requiere almacenar stock' },
         ];
 
         for (const roleData of roles) {
