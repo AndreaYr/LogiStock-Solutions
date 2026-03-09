@@ -42,8 +42,12 @@ export const AuthController = {
             const tokens = await authService.login({ email, password, ipAddress, userAgent });
             res.status(200).json({ message: 'Login exitoso.', ...tokens });
         } catch (err: any) {
-            const status = err.message.includes('Credenciales') || err.message.includes('bloqueada') ? 401 : 500;
-            res.status(status).json({ message: err.message });
+            console.error('[AuthController] ❌ ERROR EN LOGIN:', err);
+            const status = err.message?.includes('Credenciales') || err.message?.includes('bloqueada') ? 401 : 500;
+            res.status(status).json({
+                message: err.message || 'Error interno del servidor',
+                debug: err.stack
+            });
         }
     },
 
