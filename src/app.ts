@@ -10,6 +10,11 @@ import { securityHeaders, corsConfig, rateLimiter } from './middlewares/security
 const app = express();
 
 // Middlewares globales
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
+});
+
 app.use(securityHeaders);
 app.use(corsConfig);
 app.use('/api', rateLimiter); // Limitar peticiones a las rutas de la API

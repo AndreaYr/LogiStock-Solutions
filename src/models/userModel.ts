@@ -14,6 +14,8 @@ class User extends Model<IUserAttributes, IUserCreationAttributes> implements IU
     declare phone: string | null;
     declare email: string;
     declare password: string;
+    declare resetPasswordToken: string | null;
+    declare resetPasswordExpires: Date | null;
     declare isActive: boolean;
     declare isVerified: boolean;
     declare lastLogin: Date | null;
@@ -72,6 +74,18 @@ User.init(
             type: DataTypes.STRING(255),
             allowNull: false,
             comment: 'Hash bcrypt de la contraseña del usuario',
+        },
+        resetPasswordToken: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            comment: 'Token para recuperación de contraseña',
+        },
+        resetPasswordExpires: {
+            type: DataTypes.DATE,
+            allowNull: true,
+            defaultValue: null,
+            comment: 'Fecha de expiración del token de recuperación',
         },
         // Indica si la cuenta eestá habilitada o deshabilitada por el admin.
         isActive: {

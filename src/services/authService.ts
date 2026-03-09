@@ -9,9 +9,12 @@ import { RefreshTokenRepository } from '../repositories/refreshTokenRepositories
 import { LoginAttemptRepository } from '../repositories/loginAttemptRepositories.js';
 import roleRepository from '../repositories/roleRepositories.js';
 import tokenService from './tokenService.js';
-import { sendWelcomeEmail, sendLoginAlertEmail } from './emailService.js';
+import { sendWelcomeEmail, sendLoginAlertEmail, sendPasswordResetEmail, sendPasswordChangedEmail } from './emailService.js';
+import notificationService from './notificationService.js';
 import { UserRole } from '../interfaces/interfaces.js';
 import { env } from '../config/env.js';
+import crypto from 'crypto';
+import { Op } from 'sequelize';
 
 const userRepo = new UserRepository();
 const refreshTokenRepo = new RefreshTokenRepository();
@@ -68,10 +71,13 @@ class AuthService {
             isActive: true,
             isVerified: false,
             lastLogin: null,
+            resetPasswordToken: null,
+            resetPasswordExpires: null
         });
 
         // Enviar email de bienvenida (no bloquea si falla)
         sendWelcomeEmail(user.email, user.firstName).catch(console.error);
+        notificationService.notifyUserRegistered(user.id, user.firstName).catch(console.error);
 
         return this._issueTokens(user.id, user.roleId, clientRole.name);
     }
@@ -118,6 +124,7 @@ class AuthService {
 
         // Notificación de alerta de acceso (no bloquea si falla)
         sendLoginAlertEmail(user.email, user.firstName, ipAddress, userAgent ?? null).catch(console.error);
+        notificationService.notifyLogin(user.id, ipAddress).catch(console.error);
 
         const role = await roleRepository.findById(user.roleId);
         return this._issueTokens(user.id, user.roleId, role?.name ?? UserRole.CLIENTE);
@@ -146,6 +153,49 @@ class AuthService {
      */
     async logout(refreshTokenValue: string): Promise<void> {
         await refreshTokenRepo.revokeToken(refreshTokenValue);
+    }
+
+    /**
+     * Inicia el flujo de recuperación de contraseña generando un token.
+     */
+    async forgotPassword(email: string): Promise<void> {
+        const user = await userRepo.findByEmail(email);
+        if (!user) return; // Por seguridad no revelamos si existe o no
+
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+        await userRepo.update(user.id, {
+            resetPasswordToken: hashedToken,
+            resetPasswordExpires: new Date(Date.now() + 3600000) // 1 hora
+        });
+
+        await sendPasswordResetEmail(user.email, user.firstName, resetToken).catch(console.error);
+    }
+
+    /**
+     * Restablece la contraseña usando un token válido.
+     */
+    async resetPassword(token: string, newPassword: string): Promise<void> {
+        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+        const user = await userRepo.findOne({
+            where: {
+                resetPasswordToken: hashedToken,
+                resetPasswordExpires: { [Op.gt]: new Date() }
+            }
+        });
+
+        if (!user) throw new Error('Token inválido o expirado.');
+
+        const hashed = await bcrypt.hash(newPassword, 12);
+        await userRepo.update(user.id, {
+            password: hashed,
+            resetPasswordToken: null,
+            resetPasswordExpires: null
+        });
+
+        sendPasswordChangedEmail(user.email, user.firstName).catch(console.error);
     }
 
     // ─── Privado ──────────────────────────────────────────────────────────────

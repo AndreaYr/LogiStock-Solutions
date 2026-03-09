@@ -58,6 +58,8 @@ export interface IUserAttributes {
     phone: string | null;   // opcional
     email: string;
     password: string;
+    resetPasswordToken: string | null;
+    resetPasswordExpires: Date | null;
     isActive: boolean;      // Si la cuenta está activa o deshabilitada
     isVerified: boolean;    // Si el email fue verificado
     lastLogin: Date | null; // Ultima vez que inició sesión

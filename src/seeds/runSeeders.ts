@@ -113,7 +113,8 @@ const seedDatabase = async () => {
                     storageLength: Math.floor(Math.random() * 50) + 10,
                     storageWidth: Math.floor(Math.random() * 40) + 10,
                     storageHeight: Math.floor(Math.random() * 10) + 3,
-                    imageUrl: randomImg
+                    imageUrl: randomImg,
+                    monthlyPrice: Math.floor(Math.random() * 4000) + 1000  // Entre $1.000 y $5.000 para pruebas
                 }
             });
         }

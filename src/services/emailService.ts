@@ -1,17 +1,38 @@
 /**
- * Servicio de notificaciones por email usando Resend.
- * Centraliza todos los envíos de correo del sistema.
+ * Servicio de notificaciones por email usando Nodemailer (SMTP).
+ * Permite usar Gmail, Outlook o cualquier servidor SMTP.
  */
 
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 import { env } from '../config/env.js';
 
-const resend = new Resend(env.RESEND_API_KEY);
+// Configuración del transporte SMTP
+const transporter = nodemailer.createTransport({
+  host: env.SMTP_HOST,
+  port: env.SMTP_PORT,
+  secure: env.SMTP_PORT === 465, // true para 465, false para otros puertos
+  auth: {
+    user: env.SMTP_USER,
+    pass: env.SMTP_PASS,
+  },
+});
+
+// Verificar conexión al iniciar
+transporter.verify((error) => {
+  if (error) {
+    console.error('[EmailService] ❌ Error de configuración SMTP:', error.message);
+    if (!env.SMTP_USER || !env.SMTP_PASS) {
+      console.warn('[EmailService] 💡 TIP: Asegúrate de configurar SMTP_USER y SMTP_PASS en el .env');
+    }
+  } else {
+    console.log('[EmailService] ✅ Servidor de correo listo (SMTP)');
+  }
+});
 
 // ──────────────────────────── Helpers de plantillas ────────────────────────────
 
 function baseLayout(title: string, body: string): string {
-    return `
+  return `
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -56,7 +77,7 @@ function baseLayout(title: string, body: string): string {
 }
 
 function primaryButton(url: string, text: string): string {
-    return `
+  return `
     <div style="text-align:center;margin:28px 0;">
       <a href="${url}" style="background:#1a56db;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:6px;font-size:15px;font-weight:600;display:inline-block;">
         ${text}
@@ -74,13 +95,13 @@ function primaryButton(url: string, text: string): string {
  * Envía un email de verificación de cuenta al registrarse.
  */
 export async function sendVerificationEmail(
-    to: string,
-    firstName: string,
-    verificationToken: string
+  to: string,
+  firstName: string,
+  verificationToken: string
 ): Promise<void> {
-    const url = `${env.APP_URL}/auth/verify-email?token=${verificationToken}`;
+  const url = `${env.APP_URL}/auth/verify-email?token=${verificationToken}`;
 
-    const body = `
+  const body = `
       <h2 style="color:#111827;margin-top:0;">¡Bienvenido, ${firstName}!</h2>
       <p style="color:#374151;line-height:1.6;">
         Tu cuenta en <strong>LogiStock Solutions</strong> fue creada exitosamente.
@@ -94,22 +115,22 @@ export async function sendVerificationEmail(
         Si no creaste esta cuenta, puedes ignorar este mensaje.
       </p>`;
 
-    await resend.emails.send({
-        from: env.RESEND_FROM_EMAIL,
-        to,
-        subject: 'Verifica tu cuenta en LogiStock Solutions',
-        html: baseLayout('Verificación de cuenta', body),
-    });
+  await transporter.sendMail({
+    from: env.EMAIL_FROM,
+    to,
+    subject: 'Verifica tu cuenta en LogiStock Solutions',
+    html: baseLayout('Verificación de cuenta', body),
+  });
 }
 
 /**
  * Envía un email de bienvenida después de verificar la cuenta.
  */
 export async function sendWelcomeEmail(
-    to: string,
-    firstName: string
+  to: string,
+  firstName: string
 ): Promise<void> {
-    const body = `
+  const body = `
       <h2 style="color:#111827;margin-top:0;">¡Cuenta verificada, ${firstName}! 🎉</h2>
       <p style="color:#374151;line-height:1.6;">
         Tu cuenta está activa. Ya puedes iniciar sesión y comenzar a gestionar
@@ -117,25 +138,30 @@ export async function sendWelcomeEmail(
       </p>
       ${primaryButton(`${env.APP_URL}/auth/login`, 'Iniciar sesión')}`;
 
-    await resend.emails.send({
-        from: env.RESEND_FROM_EMAIL,
-        to,
-        subject: '¡Tu cuenta en LogiStock está lista!',
-        html: baseLayout('Bienvenido a LogiStock', body),
+  try {
+    const info = await transporter.sendMail({
+      from: env.EMAIL_FROM,
+      to,
+      subject: '¡Tu cuenta en LogiStock está lista!',
+      html: baseLayout('Bienvenido a LogiStock', body),
     });
+    console.log('[EmailService] Email de bienvenida enviado:', info.messageId);
+  } catch (err) {
+    console.error('[EmailService] Error enviando email de bienvenida:', err);
+  }
 }
 
 /**
  * Envía el enlace para restablecer la contraseña.
  */
 export async function sendPasswordResetEmail(
-    to: string,
-    firstName: string,
-    resetToken: string
+  to: string,
+  firstName: string,
+  resetToken: string
 ): Promise<void> {
-    const url = `${env.APP_URL}/auth/reset-password?token=${resetToken}`;
+  const url = `${env.APP_URL}/auth/reset-password?token=${resetToken}`;
 
-    const body = `
+  const body = `
       <h2 style="color:#111827;margin-top:0;">Restablece tu contraseña</h2>
       <p style="color:#374151;line-height:1.6;">
         Hola <strong>${firstName}</strong>, recibimos una solicitud para restablecer
@@ -149,22 +175,22 @@ export async function sendPasswordResetEmail(
         ⚠️ Si no solicitaste este cambio, ignora este mensaje. Tu contraseña actual sigue siendo válida.
       </p>`;
 
-    await resend.emails.send({
-        from: env.RESEND_FROM_EMAIL,
-        to,
-        subject: 'Restablece tu contraseña — LogiStock Solutions',
-        html: baseLayout('Restablecer contraseña', body),
-    });
+  await transporter.sendMail({
+    from: env.EMAIL_FROM,
+    to,
+    subject: 'Restablece tu contraseña — LogiStock Solutions',
+    html: baseLayout('Restablecer contraseña', body),
+  });
 }
 
 /**
  * Confirma que la contraseña fue cambiada exitosamente.
  */
 export async function sendPasswordChangedEmail(
-    to: string,
-    firstName: string
+  to: string,
+  firstName: string
 ): Promise<void> {
-    const body = `
+  const body = `
       <h2 style="color:#111827;margin-top:0;">Contraseña actualizada</h2>
       <p style="color:#374151;line-height:1.6;">
         Hola <strong>${firstName}</strong>, tu contraseña fue cambiada exitosamente el
@@ -175,24 +201,24 @@ export async function sendPasswordChangedEmail(
       </p>
       ${primaryButton(`${env.APP_URL}/auth/login`, 'Ir al inicio de sesión')}`;
 
-    await resend.emails.send({
-        from: env.RESEND_FROM_EMAIL,
-        to,
-        subject: 'Tu contraseña fue actualizada — LogiStock Solutions',
-        html: baseLayout('Contraseña actualizada', body),
-    });
+  await transporter.sendMail({
+    from: env.EMAIL_FROM,
+    to,
+    subject: 'Tu contraseña fue actualizada — LogiStock Solutions',
+    html: baseLayout('Contraseña actualizada', body),
+  });
 }
 
 /**
  * Alerta de inicio de sesión desde un nuevo dispositivo o IP.
  */
 export async function sendLoginAlertEmail(
-    to: string,
-    firstName: string,
-    ipAddress: string,
-    userAgent: string | null
+  to: string,
+  firstName: string,
+  ipAddress: string,
+  userAgent: string | null
 ): Promise<void> {
-    const body = `
+  const body = `
       <h2 style="color:#111827;margin-top:0;">Nuevo inicio de sesión detectado</h2>
       <p style="color:#374151;line-height:1.6;">
         Hola <strong>${firstName}</strong>, se detectó un inicio de sesión en tu cuenta.
@@ -215,10 +241,42 @@ export async function sendLoginAlertEmail(
         ⚠️ Si no fuiste tú, cambia tu contraseña inmediatamente.
       </p>`;
 
-    await resend.emails.send({
-        from: env.RESEND_FROM_EMAIL,
-        to,
-        subject: '⚠️ Nuevo inicio de sesión en tu cuenta',
-        html: baseLayout('Alerta de inicio de sesión', body),
-    });
+  await transporter.sendMail({
+    from: env.EMAIL_FROM,
+    to,
+    subject: '⚠️ Nuevo inicio de sesión en tu cuenta',
+    html: baseLayout('Alerta de inicio de sesión', body),
+  });
+}
+
+/**
+ * Envía una notificación genérica de negocio.
+ */
+export async function sendNotificationEmail(
+  to: string,
+  firstName: string,
+  title: string,
+  message: string
+): Promise<void> {
+  const body = `
+      <h2 style="color:#111827;margin-top:0;">${title}</h2>
+      <p style="color:#374151;line-height:1.6;">
+        Hola <strong>${firstName}</strong>,
+      </p>
+      <div style="background:#f9fafb;padding:20px;border-radius:8px;border:1px solid #e5e7eb;margin:20px 0;">
+        <p style="margin:0;color:#111827;font-size:16px;line-height:1.5;">
+          ${message}
+        </p>
+      </div>
+      <p style="color:#6b7280;font-size:14px;">
+        Puedes ver más detalles ingresando a tu panel de control en LogiStock.
+      </p>
+      ${primaryButton(`${env.APP_URL}/dashboard`, 'Ir al Dashboard')}`;
+
+  await transporter.sendMail({
+    from: env.EMAIL_FROM,
+    to,
+    subject: `${title} — LogiStock Solutions`,
+    html: baseLayout(title, body),
+  });
 }

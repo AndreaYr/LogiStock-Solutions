@@ -80,4 +80,37 @@ export const AuthController = {
             res.status(500).json({ message: err.message });
         }
     },
+
+    /** POST /api/auth/forgot-password */
+    async forgotPassword(req: Request, res: Response): Promise<void> {
+        try {
+            const { email } = req.body;
+            if (!email) {
+                res.status(400).json({ message: 'email es requerido.' });
+                return;
+            }
+
+            await authService.forgotPassword(email);
+            // Siempre respondemos 200 por seguridad (no confirmar si el email existe)
+            res.status(200).json({ message: 'Si el correo está registrado, recibirás un link de recuperación.' });
+        } catch (err: any) {
+            res.status(500).json({ message: err.message });
+        }
+    },
+
+    /** POST /api/auth/reset-password */
+    async resetPassword(req: Request, res: Response): Promise<void> {
+        try {
+            const { token, newPassword } = req.body;
+            if (!token || !newPassword) {
+                res.status(400).json({ message: 'token y newPassword son requeridos.' });
+                return;
+            }
+
+            await authService.resetPassword(token, newPassword);
+            res.status(200).json({ message: 'Contraseña actualizada exitosamente.' });
+        } catch (err: any) {
+            res.status(400).json({ message: err.message });
+        }
+    },
 };

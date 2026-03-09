@@ -8,6 +8,8 @@
 
 import { Request, Response } from 'express';
 import wompiService from '../services/wompiService.js';
+import notificationService from '../services/notificationService.js';
+import { Rental, Warehouse } from '../models/index.js';
 import type { IWompiWebhookEvent } from '../interfaces/wompiInterfaces.js';
 
 export const WompiController = {
@@ -77,6 +79,43 @@ export const WompiController = {
                 event.environment,
                 event.data.transaction,
             );
+
+            // ── Generar notificación según el estado del pago ─────────────────
+            try {
+                // La referencia tiene formato: LOGI-{warehouseId}-{timestamp}
+                const parts = event.data.transaction.reference?.split('-');
+                const warehouseId = parts && parts.length >= 2 ? parseInt(parts[1], 10) : null;
+
+                let warehouseName = 'la bodega';
+                let rentalUserId: number | null = null;
+
+                if (warehouseId) {
+                    const warehouse = await Warehouse.findByPk(warehouseId);
+                    if (warehouse) warehouseName = warehouse.description;
+
+                    // Buscar el alquiler activo para identificar al usuario
+                    const rental = await Rental.findOne({
+                        where: { warehouseId, status: 'ACTIVE' },
+                        order: [['createdAt', 'DESC']],
+                    });
+                    if (rental) rentalUserId = rental.userId;
+                }
+
+                if (rentalUserId) {
+                    if (status === 'APPROVED') {
+                        await notificationService.notifyPaymentConfirmed(
+                            rentalUserId,
+                            warehouseName,
+                            amount_in_cents
+                        );
+                    } else if (status === 'DECLINED' || status === 'ERROR') {
+                        await notificationService.notifyPaymentFailed(rentalUserId, warehouseName);
+                    }
+                }
+            } catch (notifErr) {
+                // Las notificaciones no deben interrumpir la respuesta al webhook
+                console.error('[Wompi Webhook] Error generando notificación:', notifErr);
+            }
 
             console.log(`[Wompi Webhook] Transacción ${id} → ${status} guardada en BD.`);
             res.status(200).json({ received: true });

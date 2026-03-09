@@ -12,10 +12,11 @@ export interface IWarehouseAttributes {
     storageWidth: number | null;
     storageHeight: number | null;
     imageUrl: string | null;
+    monthlyPrice: number;
 }
 
 // Interface para creación (id opcional generado por DB)
-export interface IWarehouseCreationAttributes extends Optional<IWarehouseAttributes, 'id' | 'storageLength' | 'storageWidth' | 'storageHeight' | 'postalCode' | 'address' | 'imageUrl'> { }
+export interface IWarehouseCreationAttributes extends Optional<IWarehouseAttributes, 'id' | 'storageLength' | 'storageWidth' | 'storageHeight' | 'postalCode' | 'address' | 'imageUrl' | 'monthlyPrice'> { }
 
 // Interface Final del Modelo
 export interface IWarehouse extends Model<IWarehouseAttributes, IWarehouseCreationAttributes>, IWarehouseAttributes { }
@@ -30,6 +31,7 @@ class Warehouse extends Model<IWarehouseAttributes, IWarehouseCreationAttributes
     declare storageWidth: number | null;
     declare storageHeight: number | null;
     declare imageUrl: string | null;
+    declare monthlyPrice: number;
 }
 
 Warehouse.init({
@@ -70,6 +72,11 @@ Warehouse.init({
     imageUrl: {
         type: DataTypes.STRING(255),
         allowNull: true,
+    },
+    monthlyPrice: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+        defaultValue: 0,
     }
 }, {
     sequelize,

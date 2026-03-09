@@ -5,6 +5,8 @@ import LoginAttempt from "./loginAttemptModel.js";
 import PaymentTransaction from "./paymentTransactionModel.js";
 import Warehouse from './warehouseModel.js';
 import Rental from './rentalModel.js';
+import Notification from './notificationModel.js';
+import Movement from './movementModel.js';
 
 // -------------------- Role - User --------------------
 
@@ -82,6 +84,49 @@ Rental.belongsTo(Warehouse, {
     as: 'warehouse'
 });
 
+// -------------------- User - Notification --------------------
+
+// Un usuario puede tener muchas notificaciones
+User.hasMany(Notification, {
+    foreignKey: 'userId',
+    as: 'notifications',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+Notification.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user'
+});
+
+// -------------------- User - Movement - Warehouse --------------------
+
+// Un usuario (manager/auxiliar) registra movimientos
+User.hasMany(Movement, {
+    foreignKey: 'userId',
+    as: 'movements',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+Movement.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user'
+});
+
+// Una bodega tiene muchos movimientos de inventario
+Warehouse.hasMany(Movement, {
+    foreignKey: 'warehouseId',
+    as: 'movements',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+Movement.belongsTo(Warehouse, {
+    foreignKey: 'warehouseId',
+    as: 'warehouse'
+});
+
 // PaymentTransaction no tiene FK con otras tablas por diseño:
 // las transacciones de pago se identifican por 'reference' (orden externa)
-export { Role, User, RefreshToken, LoginAttempt, PaymentTransaction, Warehouse, Rental };
+export { Role, User, RefreshToken, LoginAttempt, PaymentTransaction, Warehouse, Rental, Notification, Movement };
