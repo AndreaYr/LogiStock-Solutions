@@ -3,7 +3,8 @@ import User from "./userModel.js";
 import RefreshToken from "./refreshTokenModel.js";
 import LoginAttempt from "./loginAttemptModel.js";
 import PaymentTransaction from "./paymentTransactionModel.js";
-import Bodega from './bodegaModel.js';
+import Warehouse from './warehouseModel.js';
+import Rental from './rentalModel.js';
 
 // -------------------- Role - User --------------------
 
@@ -53,6 +54,34 @@ LoginAttempt.belongsTo(User, {
     as: 'user'
 });
 
+// -------------------- User - Rental - Warehouse --------------------
+
+// A user can have many rentals
+User.hasMany(Rental, {
+    foreignKey: 'userId',
+    as: 'rentals',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+Rental.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user'
+});
+
+// A warehouse can have many rental records (history)
+Warehouse.hasMany(Rental, {
+    foreignKey: 'warehouseId',
+    as: 'rentals',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+Rental.belongsTo(Warehouse, {
+    foreignKey: 'warehouseId',
+    as: 'warehouse'
+});
+
 // PaymentTransaction no tiene FK con otras tablas por diseño:
 // las transacciones de pago se identifican por 'reference' (orden externa)
-export { Role, User, RefreshToken, LoginAttempt, PaymentTransaction };
+export { Role, User, RefreshToken, LoginAttempt, PaymentTransaction, Warehouse, Rental };

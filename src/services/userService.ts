@@ -13,6 +13,8 @@ export interface UpdateProfileDto {
     firstName?: string;
     lastName?: string;
     phone?: string;
+    documentId?: string; // Nuevo
+    address?: string;    // Nuevo
 }
 
 export interface ChangePasswordDto {

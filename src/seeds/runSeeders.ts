@@ -1,25 +1,23 @@
 import bcrypt from 'bcryptjs';
 import sequelize from '../config/database.js';
-import Role from '../models/roleModel.js';
-import User from '../models/userModel.js';
+import { Role, User, Warehouse, Rental } from '../models/index.js';
 import { UserRole } from '../interfaces/interfaces.js';
-import Bodega from '../models/bodegaModel.js';
 
 const seedDatabase = async () => {
     try {
-        console.log('⏳ Conectando a la base de datos...');
+        console.log('⏳ Connecting to database...');
         await sequelize.authenticate();
-        console.log('✅ Base de datos conectada.');
+        console.log('✅ Database connected.');
 
-        // 1. Asegurar que las tablas existan
+        // 1. Ensure tables exist
         await sequelize.sync();
 
-        console.log('⏳ Poblando Roles...');
+        console.log('⏳ Seeding Roles...');
         const roles = [
-            { name: UserRole.ADMIN, description: 'Administrador del sistema LogiStock' },
-            { name: UserRole.JEFE_BODEGA, description: 'Jefe encargado de gestionar una bodega' },
-            { name: UserRole.AUXILIAR, description: 'Auxiliar de bodega para operaciones' },
-            { name: UserRole.CLIENTE, description: 'Cliente que requiere almacenar stock' },
+            { name: UserRole.ADMIN, description: 'LogiStock System Administrator' },
+            { name: UserRole.JEFE_BODEGA, description: 'Warehouse Manager' },
+            { name: UserRole.AUXILIAR, description: 'Warehouse Assistant' },
+            { name: UserRole.CLIENTE, description: 'Customer' },
         ];
 
         for (const roleData of roles) {
@@ -28,13 +26,12 @@ const seedDatabase = async () => {
                 defaults: roleData
             });
         }
-        console.log('✅ Roles creados exitosamente.');
+        console.log('✅ Roles created successfully.');
 
-        console.log('⏳ Poblando Usuarios...');
-        // Hash de contraseña por defecto para todos
+        console.log('⏳ Seeding Users...');
+        // Default password hash
         const hashedPassword = await bcrypt.hash('cliente1234', 12);
 
-        // Mapear los roles de la base de datos para obtener sus IDs reales
         const adminRole = await Role.findOne({ where: { name: UserRole.ADMIN } });
         const managerRole = await Role.findOne({ where: { name: UserRole.JEFE_BODEGA } });
         const operatorRole = await Role.findOne({ where: { name: UserRole.AUXILIAR } });
@@ -43,7 +40,7 @@ const seedDatabase = async () => {
         const users = [
             {
                 roleId: clientRole!.id,
-                firstName: 'Cliente',
+                firstName: 'Client',
                 lastName: 'Demo',
                 email: 'cliente1@gmail.com',
                 password: hashedPassword,
@@ -63,8 +60,8 @@ const seedDatabase = async () => {
             },
             {
                 roleId: managerRole!.id,
-                firstName: 'Jefe',
-                lastName: 'Bodega',
+                firstName: 'Manager',
+                lastName: 'Warehouse',
                 email: 'manager1@gmail.com',
                 password: hashedPassword,
                 isActive: true,
@@ -73,8 +70,8 @@ const seedDatabase = async () => {
             },
             {
                 roleId: operatorRole!.id,
-                firstName: 'Auxiliar',
-                lastName: 'Operador',
+                firstName: 'Assistant',
+                lastName: 'Operator',
                 email: 'operator1@gmail.com',
                 password: hashedPassword,
                 isActive: true,
@@ -89,12 +86,12 @@ const seedDatabase = async () => {
                 defaults: userData
             });
             if (created) {
-                console.log(`- Usuario ${userData.email} (Rol: ${userData.roleId}) creado con éxito.`);
+                console.log(`- User ${userData.email} (Role: ${userData.roleId}) created.`);
             }
         }
-        console.log('✅ Usuarios creados exitosamente.');
+        console.log('✅ Users created successfully.');
 
-        console.log('⏳ Poblando Bodegas...');
+        console.log('⏳ Seeding Warehouses...');
         const imageUrls = [
             'https://images.unsplash.com/photo-1586528116311-ad8ed7c83a7f?q=80&w=1000&auto=format&fit=crop',
             'https://images.unsplash.com/photo-1553413077-190dd305871c?q=80&w=1000&auto=format&fit=crop',
@@ -102,33 +99,53 @@ const seedDatabase = async () => {
             'https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=1000&auto=format&fit=crop'
         ];
 
-
         for (let i = 1; i <= 20; i++) {
             const randomImg = imageUrls[Math.floor(Math.random() * imageUrls.length)];
-            const capacidadRandom = Math.floor(Math.random() * 5000) + 1000; // Entre 1000 y 6000
+            const randomCapacity = Math.floor(Math.random() * 5000) + 1000;
 
-            await Bodega.findOrCreate({
-                where: { descripcion: `Bodega LogiStock ${i}` },
+            await Warehouse.findOrCreate({
+                where: { description: `LogiStock Warehouse ${i}` },
                 defaults: {
-                    descripcion: `Bodega LogiStock ${i}`,
-                    capacidadOcupado: Math.floor(Math.random() * capacidadRandom), // Ocupación debe ser menor
-                    direccion: `Calle Logística ${i} #40-20`,
-                    codigoPostal: `1102${Math.floor(Math.random() * 90) + 10}`, // 110210 a 110299
-                    largoAlmacenamiento: Math.floor(Math.random() * 50) + 10,
-                    anchoAlmacenamiento: Math.floor(Math.random() * 40) + 10,
-                    altoAlmacenamiento: Math.floor(Math.random() * 10) + 3,
-                    imagenUrl: randomImg
+                    description: `LogiStock Warehouse ${i}`,
+                    capacityOccupied: Math.floor(Math.random() * randomCapacity),
+                    address: `Logstics Street ${i} #40-20`,
+                    postalCode: `1102${Math.floor(Math.random() * 90) + 10}`,
+                    storageLength: Math.floor(Math.random() * 50) + 10,
+                    storageWidth: Math.floor(Math.random() * 40) + 10,
+                    storageHeight: Math.floor(Math.random() * 10) + 3,
+                    imageUrl: randomImg
                 }
             });
         }
-        console.log('✅ 20 Bodegas creadas exitosamente.');
+        console.log('✅ 20 Warehouses created.');
 
-        console.log('🎉 Seeding finalizado con éxito.');
+        console.log('⏳ Seeding sample Rentals...');
+        const demoUser = await User.findOne({ where: { email: 'cliente1@gmail.com' } });
+        const sampleWarehouses = await Warehouse.findAll({ limit: 3 });
+
+        if (demoUser && sampleWarehouses.length > 0) {
+            for (const warehouse of sampleWarehouses) {
+                await Rental.findOrCreate({
+                    where: { userId: demoUser.id, warehouseId: warehouse.id },
+                    defaults: {
+                        userId: demoUser.id,
+                        warehouseId: warehouse.id,
+                        startDate: new Date(),
+                        monthlyAmount: 150000 + (Math.random() * 50000),
+                        status: 'ACTIVE'
+                    }
+                });
+            }
+            console.log(`✅ 3 Rentals created for ${demoUser.email}.`);
+        }
+
+        console.log('🎉 Seeding finished successfully.');
         process.exit(0);
     } catch (error) {
-        console.error('❌ Error ejecutando el seeder:', error);
+        console.error('❌ Error executing seeder:', error);
         process.exit(1);
     }
 };
 
 seedDatabase();
+

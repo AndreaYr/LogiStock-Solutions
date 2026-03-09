@@ -2,11 +2,11 @@
  * Modelo Sequelize para la tabla "users". Representa a cualquier usuario del sistema independientemente de su rol.
  */
 
-import { DataTypes, Model} from "sequelize";
+import { DataTypes, Model } from "sequelize";
 import sequelize from "../config/database.js";
-import {IUser, IUserAttributes, IUserCreationAttributes} from "../interfaces/interfaces.js";
+import { IUser, IUserAttributes, IUserCreationAttributes } from "../interfaces/interfaces.js";
 
-class User extends Model<IUserAttributes, IUserCreationAttributes> implements IUser{
+class User extends Model<IUserAttributes, IUserCreationAttributes> implements IUser {
     declare id: number;
     declare roleId: number;
     declare firstName: string;
@@ -14,6 +14,8 @@ class User extends Model<IUserAttributes, IUserCreationAttributes> implements IU
     declare phone: string | null;
     declare email: string;
     declare password: string;
+    declare documentId: string | null; // Nuevo
+    declare address: string | null;    // Nuevo
     declare isActive: boolean;
     declare isVerified: boolean;
     declare lastLogin: Date | null;
@@ -29,7 +31,7 @@ class User extends Model<IUserAttributes, IUserCreationAttributes> implements IU
 // Iniciamos el modelo con sus atributos y opciones
 User.init(
     {
-        id:{
+        id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
             primaryKey: true,
@@ -48,7 +50,7 @@ User.init(
             allowNull: false,
             comment: 'Nombre del usuario',
         },
-        lastName:{
+        lastName: {
             type: DataTypes.STRING(70),
             allowNull: false,
             comment: 'Apellido del usuario',
@@ -63,7 +65,7 @@ User.init(
             type: DataTypes.STRING(100),
             allowNull: false,
             unique: true, // Cada email debe ser único en la tabla
-            validate:{
+            validate: {
                 isEmail: true,
             },
             comment: 'Correo electrónico del usuario, debe ser único',
@@ -73,15 +75,27 @@ User.init(
             allowNull: false,
             comment: 'Hash bcrypt de la contraseña del usuario',
         },
+        documentId: {
+            type: DataTypes.STRING(30),
+            allowNull: true,
+            defaultValue: null,
+            comment: 'Documento de identidad del usuario',
+        },
+        address: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            comment: 'Dirección de residencia del usuario',
+        },
         // Indica si la cuenta eestá habilitada o deshabilitada por el admin.
-        isActive: { 
+        isActive: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
             defaultValue: true,
             comment: 'Si la cuenta está activa. False = cuenta desactivada por admin',
         },
         // Indica si el usuario ha verificado su email. Un usuario no verificado no puede iniciar sesión.
-        isVerified:{
+        isVerified: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
             defaultValue: false,
@@ -104,7 +118,7 @@ User.init(
         comment: 'Tabla que almacena la información de los usuarios del sistema',
 
         // indices para optimizar consultas frecuentes
-        indexes:[
+        indexes: [
             {
                 unique: true,
                 fields: ['email'], // Índice único para el email
