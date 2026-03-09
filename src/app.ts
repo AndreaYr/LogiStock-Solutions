@@ -37,8 +37,8 @@ const startServer = async () => {
         console.log('DB conectada');
 
 
-        await sequelize.sync({ alter: true });
-        console.log('Tablas sincronizadas (alter: true)');
+        await sequelize.sync();
+        console.log('Tablas sincronizadas');
 
         app.listen(env.PORT, () => {
             console.log(`Servidor corriendo en puerto ${env.PORT}`);
