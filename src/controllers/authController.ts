@@ -46,7 +46,6 @@ export const AuthController = {
             const status = err.message?.includes('Credenciales') || err.message?.includes('bloqueada') ? 401 : 500;
             res.status(status).json({
                 message: err.message || 'Error interno del servidor',
-                debug: err.stack
             });
         }
     },

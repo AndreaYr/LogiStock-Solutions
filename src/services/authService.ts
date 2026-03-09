@@ -89,71 +89,45 @@ class AuthService {
      */
     async login(dto: LoginDto): Promise<AuthTokens> {
         const { email, password, ipAddress, userAgent } = dto;
-        console.log(`[AuthService] Intentando login para: ${email} desde ${ipAddress}`);
 
-        try {
-            const user = await userRepo.findByEmail(email);
-            console.log(`[AuthService] Usuario encontrado: ${!!user}`);
+        const user = await userRepo.findByEmail(email);
 
-            // Contar intentos fallidos recientes
-            if (user) {
-                const failedCount = await loginAttemptRepo.countFailedByEmail(email);
-                console.log(`[AuthService] Intentos fallidos recientes: ${failedCount}`);
-                if (failedCount >= MAX_FAILED_ATTEMPTS) {
-                    await userRepo.lockAccount(user.id);
-                    await loginAttemptRepo.create({ userId: user.id, email, success: false, ipAddress, userAgent, attemptedAt: new Date() });
-                    throw new Error('Cuenta bloqueada temporalmente por múltiples intentos fallidos.');
-                }
+        // Contar intentos fallidos recientes
+        if (user) {
+            const failedCount = await loginAttemptRepo.countFailedByEmail(email);
+            if (failedCount >= MAX_FAILED_ATTEMPTS) {
+                await userRepo.lockAccount(user.id);
+                await loginAttemptRepo.create({ userId: user.id, email, success: false, ipAddress, userAgent, attemptedAt: new Date() });
+                throw new Error('Cuenta bloqueada temporalmente por múltiples intentos fallidos.');
             }
-
-            console.log(`[AuthService] Comparando contraseña...`);
-            const invalid = !user || !(await bcrypt.compare(password, user.password));
-
-            if (invalid) {
-                console.log(`[AuthService] Credenciales inválidas para: ${email}`);
-                await loginAttemptRepo.create({
-                    userId: user?.id ?? null,
-                    email,
-                    success: false,
-                    ipAddress,
-                    userAgent,
-                    attemptedAt: new Date(),
-                });
-                throw new Error('Credenciales inválidas.');
-            }
-
-            if (!user.isActive) {
-                console.log(`[AuthService] Cuenta inactiva: ${email}`);
-                throw new Error('La cuenta está desactivada.');
-            }
-
-            // Registrar intento exitoso
-            console.log(`[AuthService] Login exitoso, registrando intento...`);
-            await loginAttemptRepo.create({ userId: user.id, email, success: true, ipAddress, userAgent, attemptedAt: new Date() });
-            await userRepo.update(user.id, { lastLogin: new Date() });
-
-            // Notificación de alerta de acceso (no bloquea si falla)
-            console.log(`[AuthService] Enviando alertas...`);
-            sendLoginAlertEmail(user.email, user.firstName, ipAddress, userAgent ?? null).catch(err => {
-                console.error('[AuthService] ❌ Error enviando email de alerta:', err);
-            });
-            notificationService.notifyLogin(user.id, ipAddress).catch(err => {
-                console.error('[AuthService] ❌ Error creando notificación de login:', err);
-            });
-
-            console.log(`[AuthService] Buscando rol para ${email}...`);
-            const role = await roleRepository.findById(user.roleId);
-            console.log(`[AuthService] Rol encontrado: ${role?.name}`);
-
-            console.log(`[AuthService] Generando tokens...`);
-            const tokens = await this._issueTokens(user.id, user.roleId, role?.name ?? UserRole.CLIENTE);
-            console.log(`[AuthService] Tokens generados exitosamente.`);
-            return tokens;
-
-        } catch (err: any) {
-            console.error(`[AuthService] ❌ ERROR en login:`, err);
-            throw err;
         }
+
+        const invalid = !user || !(await bcrypt.compare(password, user.password));
+
+        if (invalid) {
+            await loginAttemptRepo.create({
+                userId: user?.id ?? null,
+                email,
+                success: false,
+                ipAddress,
+                userAgent,
+                attemptedAt: new Date(),
+            });
+            throw new Error('Credenciales inválidas.');
+        }
+
+        if (!user.isActive) throw new Error('La cuenta está desactivada.');
+
+        // Registrar intento exitoso
+        await loginAttemptRepo.create({ userId: user.id, email, success: true, ipAddress, userAgent, attemptedAt: new Date() });
+        await userRepo.update(user.id, { lastLogin: new Date() });
+
+        // Notificación de alerta de acceso (no bloquea si falla)
+        sendLoginAlertEmail(user.email, user.firstName, ipAddress, userAgent ?? null).catch(console.error);
+        notificationService.notifyLogin(user.id, ipAddress).catch(console.error);
+
+        const role = await roleRepository.findById(user.roleId);
+        return this._issueTokens(user.id, user.roleId, role?.name ?? UserRole.CLIENTE);
     }
 
     /**
