@@ -29,7 +29,24 @@ const cleanup = async () => {
             }
         }
 
-        console.log('🎉 Limpieza finalizada.');
+        console.log('🎉 Limpieza de tablas finalizada.');
+
+        console.log('⏳ Traduciendo roles existentes a inglés...');
+        const roleTranslations = [
+            { old: 'jefe de bodega', new: 'warehouse_manager' },
+            { old: 'auxiliar', new: 'assistant' },
+            { old: 'cliente', new: 'client' }
+        ];
+
+        for (const trans of roleTranslations) {
+            await sequelize.query(
+                `UPDATE roles SET name = :new WHERE name = :old`,
+                { replacements: { old: trans.old, new: trans.new } }
+            );
+            console.log(`✅ Rol '${trans.old}' -> '${trans.new}' actualizado.`);
+        }
+
+        console.log('🎉 Todo el proceso de migración ha finalizado.');
         process.exit(0);
     } catch (error) {
         console.error('❌ Error de conexión:', error);
