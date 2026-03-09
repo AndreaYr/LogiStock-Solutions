@@ -11,10 +11,7 @@ export const RentalController = {
             const rentals = await rentalRepo.findActiveByUser(userId);
             res.status(200).json(rentals);
         } catch (err: any) {
-            res.status(500).json({
-                message: err.message,
-                debug: err.stack
-            });
+            res.status(500).json({ message: err.message });
         }
     }
 };

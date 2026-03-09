@@ -43,10 +43,7 @@ export const WarehouseController = {
             const warehouses = await warehouseRepo.findAll();
             res.status(200).json(warehouses.map(toFrontendFormat));
         } catch (err: any) {
-            res.status(500).json({
-                message: err.message,
-                debug: err.stack
-            });
+            res.status(500).json({ message: err.message });
         }
     },
 
@@ -56,10 +53,7 @@ export const WarehouseController = {
             const warehouse = await warehouseRepo.create(req.body);
             res.status(201).json(toFrontendFormat(warehouse));
         } catch (err: any) {
-            res.status(500).json({
-                message: err.message,
-                debug: err.stack
-            });
+            res.status(500).json({ message: err.message });
         }
     }
 };

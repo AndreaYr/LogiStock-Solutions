@@ -83,6 +83,7 @@ Warehouse.init({
     modelName: 'Warehouse',
     tableName: 'warehouses',
     timestamps: false,
+    underscored: true,
 });
 
 export default Warehouse;
