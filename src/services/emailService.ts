@@ -99,7 +99,7 @@ export async function sendVerificationEmail(
   firstName: string,
   verificationToken: string
 ): Promise<void> {
-  const url = `${env.APP_URL}/auth/verify-email?token=${verificationToken}`;
+  const url = `${env.BACKEND_URL}/api/auth/verify-email?token=${verificationToken}`;
 
   const body = `
       <h2 style="color:#111827;margin-top:0;">¡Bienvenido, ${firstName}!</h2>
@@ -136,7 +136,7 @@ export async function sendWelcomeEmail(
         Tu cuenta está activa. Ya puedes iniciar sesión y comenzar a gestionar
         tu inventario con <strong>LogiStock Solutions</strong>.
       </p>
-      ${primaryButton(`${env.APP_URL}/auth/login`, 'Iniciar sesión')}`;
+      ${primaryButton(`${env.APP_URL}/login`, 'Iniciar sesión')}`;
 
   try {
     const info = await transporter.sendMail({
@@ -159,7 +159,7 @@ export async function sendPasswordResetEmail(
   firstName: string,
   resetToken: string
 ): Promise<void> {
-  const url = `${env.APP_URL}/auth/reset-password?token=${resetToken}`;
+  const url = `${env.APP_URL}/reset-password?token=${resetToken}`;
 
   const body = `
       <h2 style="color:#111827;margin-top:0;">Restablece tu contraseña</h2>
@@ -199,7 +199,7 @@ export async function sendPasswordChangedEmail(
       <p style="color:#dc2626;font-size:13px;">
         ⚠️ Si no realizaste este cambio, contacta al soporte inmediatamente.
       </p>
-      ${primaryButton(`${env.APP_URL}/auth/login`, 'Ir al inicio de sesión')}`;
+      ${primaryButton(`${env.APP_URL}/login`, 'Ir al inicio de sesión')}`;
 
   await transporter.sendMail({
     from: env.EMAIL_FROM,

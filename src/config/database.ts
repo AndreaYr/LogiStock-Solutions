@@ -6,7 +6,7 @@ const sequelize = new Sequelize({
     port: env.DB_PORT,
     database: env.DB_NAME,
     username: env.DB_USER,
-    password: env.DB_PASSWORD,
+    password: env.DB_PASS,
     logging: env.NODE_ENV === 'development' ? console.log: false,
     define: {
         timestamps: true,

@@ -9,7 +9,7 @@ import { RefreshTokenRepository } from '../repositories/refreshTokenRepositories
 import { LoginAttemptRepository } from '../repositories/loginAttemptRepositories.js';
 import roleRepository from '../repositories/roleRepositories.js';
 import tokenService from './tokenService.js';
-import { sendWelcomeEmail, sendLoginAlertEmail, sendPasswordResetEmail, sendPasswordChangedEmail } from './emailService.js';
+import { sendWelcomeEmail, sendVerificationEmail, sendLoginAlertEmail, sendPasswordResetEmail, sendPasswordChangedEmail } from './emailService.js';
 import notificationService from './notificationService.js';
 import { UserRole } from '../interfaces/interfaces.js';
 import { env } from '../config/env.js';
@@ -52,7 +52,7 @@ class AuthService {
     /**
      * Registra un nuevo usuario con rol CLIENT por defecto.
      */
-    async register(dto: RegisterDto): Promise<AuthTokens> {
+    async register(dto: RegisterDto): Promise<void> {
         const existing = await userRepo.findByEmail(dto.email);
         if (existing) throw new Error('El email ya está registrado.');
 
@@ -60,6 +60,11 @@ class AuthService {
         if (!clientRole) throw new Error('Rol CLIENTE no encontrado. Ejecuta el seeder de roles.');
 
         const hashed = await bcrypt.hash(dto.password, 12);
+
+        // Generar token de verificación: el raw se envía por email, el hash se guarda en BD
+        const rawVerificationToken    = crypto.randomBytes(32).toString('hex');
+        const hashedVerificationToken = crypto.createHash('sha256').update(rawVerificationToken).digest('hex');
+        const verificationExpires     = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
 
         const user = await userRepo.create({
             firstName: dto.firstName,
@@ -72,14 +77,13 @@ class AuthService {
             isVerified: false,
             lastLogin: null,
             resetPasswordToken: null,
-            resetPasswordExpires: null
+            resetPasswordExpires: null,
+            emailVerificationToken:   hashedVerificationToken,
+            emailVerificationExpires: verificationExpires,
         });
 
-        // Enviar email de bienvenida (no bloquea si falla)
-        sendWelcomeEmail(user.email, user.firstName).catch(console.error);
-        notificationService.notifyUserRegistered(user.id, user.firstName).catch(console.error);
-
-        return this._issueTokens(user.id, user.roleId, clientRole.name);
+        // Enviar email de verificación con el token SIN hashear (no bloquea si falla)
+        sendVerificationEmail(user.email, user.firstName, rawVerificationToken).catch(console.error);
     }
 
     /**
@@ -117,6 +121,9 @@ class AuthService {
         }
 
         if (!user.isActive) throw new Error('La cuenta está desactivada.');
+
+        // Bloquear login si el email no ha sido verificado
+        if (!user.isVerified) throw new Error('Debes verificar tu email antes de iniciar sesión. Revisa tu bandeja de entrada.');
 
         // Registrar intento exitoso
         await loginAttemptRepo.create({ userId: user.id, email, success: true, ipAddress, userAgent, attemptedAt: new Date() });
@@ -196,6 +203,37 @@ class AuthService {
         });
 
         sendPasswordChangedEmail(user.email, user.firstName).catch(console.error);
+    }
+
+    /**
+     * Verifica el email del usuario usando el token recibido por correo.
+     * - Hashea el token recibido y lo busca en la BD
+     * - Valida que no haya expirado (24h)
+     * - Marca isVerified = true y limpia los campos del token
+     * - Envía email de bienvenida al confirmar
+     */
+    async verifyEmail(rawToken: string): Promise<void> {
+        const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+        const user = await userRepo.findOne({
+            where: {
+                emailVerificationToken:   hashedToken,
+                emailVerificationExpires: { [Op.gt]: new Date() }, // token no expirado
+            },
+        });
+
+        if (!user) throw new Error('Token de verificación inválido o expirado.');
+
+        // Marcar cuenta como verificada y limpiar el token
+        await userRepo.update(user.id, {
+            isVerified:               true,
+            emailVerificationToken:   null,
+            emailVerificationExpires: null,
+        });
+
+        // Enviar email de bienvenida y notificación ahora que la cuenta está confirmada
+        sendWelcomeEmail(user.email, user.firstName).catch(console.error);
+        notificationService.notifyUserRegistered(user.id, user.firstName).catch(console.error);
     }
 
     // ─── Privado ──────────────────────────────────────────────────────────────

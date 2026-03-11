@@ -16,6 +16,8 @@ async function forceSync() {
         await sequelize.query('ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "reset_password_expires" TIMESTAMP WITH TIME ZONE;');
         await sequelize.query('ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "is_verified" BOOLEAN DEFAULT FALSE;');
         await sequelize.query('ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "last_login" TIMESTAMP WITH TIME ZONE;');
+        await sequelize.query('ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "email_verification_token" VARCHAR(255);');
+        await sequelize.query('ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "email_verification_expires" TIMESTAMP WITH TIME ZONE;');
 
         console.log('Añadiendo columnas faltantes a la tabla "warehouses"...');
         await sequelize.query('ALTER TABLE "warehouses" ADD COLUMN IF NOT EXISTS "address" VARCHAR(255);');

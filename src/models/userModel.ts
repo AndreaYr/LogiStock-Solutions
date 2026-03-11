@@ -16,6 +16,8 @@ class User extends Model<IUserAttributes, IUserCreationAttributes> implements IU
     declare password: string;
     declare resetPasswordToken: string | null;
     declare resetPasswordExpires: Date | null;
+    declare emailVerificationToken: string | null;    // Token hasheado para verificar el email
+    declare emailVerificationExpires: Date | null;    // Expiración del token (24h)
     declare isActive: boolean;
     declare isVerified: boolean;
     declare lastLogin: Date | null;
@@ -86,6 +88,20 @@ User.init(
             allowNull: true,
             defaultValue: null,
             comment: 'Fecha de expiración del token de recuperación',
+        },
+        // Token hasheado (SHA-256) para verificar el email al registrarse
+        emailVerificationToken: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            comment: 'Token hasheado para verificar el email del usuario',
+        },
+        // Expiración del token de verificación (24 horas desde el registro)
+        emailVerificationExpires: {
+            type: DataTypes.DATE,
+            allowNull: true,
+            defaultValue: null,
+            comment: 'Fecha de expiración del token de verificación de email (24h)',
         },
         // Indica si la cuenta eestá habilitada o deshabilitada por el admin.
         isActive: {

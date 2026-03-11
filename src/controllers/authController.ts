@@ -5,6 +5,7 @@
 
 import { Request, Response } from 'express';
 import authService from '../services/authService.js';
+import { env } from '../config/env.js';
 
 export const AuthController = {
 
@@ -18,8 +19,8 @@ export const AuthController = {
                 return;
             }
 
-            const tokens = await authService.register({ firstName, lastName, email, password, phone });
-            res.status(201).json({ message: 'Usuario registrado exitosamente.', ...tokens });
+            await authService.register({ firstName, lastName, email, password, phone });
+            res.status(201).json({ message: 'Cuenta creada. Revisa tu correo para verificar tu cuenta.' });
         } catch (err: any) {
             const status = err.message.includes('ya está registrado') ? 409 : 500;
             res.status(status).json({ message: err.message });
@@ -114,6 +115,29 @@ export const AuthController = {
             res.status(200).json({ message: 'Contraseña actualizada exitosamente.' });
         } catch (err: any) {
             res.status(400).json({ message: err.message });
+        }
+    },
+
+    /**
+     * GET /api/auth/verify-email?token=xxx
+     * Verifica el token, actualiza la BD y redirige al frontend con el resultado.
+     * El frontend lee ?verified=true o ?error=mensaje para mostrar el estado.
+     */
+    async verifyEmail(req: Request, res: Response): Promise<void> {
+        const token = req.query.token as string;
+        const appUrl = env.APP_URL;
+
+        if (!token) {
+            res.redirect(`${appUrl}/verify-email?error=Token+requerido`);
+            return;
+        }
+
+        try {
+            await authService.verifyEmail(token);
+            res.redirect(`${appUrl}/verify-email?verified=true`);
+        } catch (err: any) {
+            const msg = encodeURIComponent(err.message ?? 'Token inválido o expirado');
+            res.redirect(`${appUrl}/verify-email?error=${msg}`);
         }
     },
 };

@@ -1,5 +1,5 @@
 // Crea, valida y revoca refresh tokens
-import refreshTokenRepositories, { RefreshTokenRepository } from "../repositories/refreshTokenRepositories.js";
+import refreshTokenRepository  from "../repositories/refreshTokenRepositories.js";
 import tokenService from "./tokenService.js";
 import { env } from "../config/env.js";
 import RefreshToken from "../models/refreshTokenModel.js";
@@ -11,8 +11,7 @@ class RefreshTokenService {
         // expiresAt = ahora + los días configurados en env
         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-        const repo = new RefreshTokenRepository();
-        return repo.create({
+        return refreshTokenRepository.create({
             userId,
             token,
             expiresAt,
@@ -24,12 +23,21 @@ class RefreshTokenService {
 
     //busca el token en BD, verifica que no esté revocado ni expirado
     async findAndValidate(token: string): Promise<RefreshToken | null> {
-        const repo = new RefreshTokenRepository();
-        const refreshToken = await repo.findByToken(token);
+        const refreshToken = await refreshTokenRepository.findByToken(token);
         if (!refreshToken || !refreshToken.isValid()) return null;
 
         return refreshToken;
     }
 
+    // Revoca un token especifico (logout de un dispositivo)
+    async revokeAll(userId: number): Promise<number> {
+        return refreshTokenRepository.revokeByUserId(userId);
+    }
 
+    // Elimina todos los tokens expirados
+    async deleteExpired(): Promise<number> {
+        return refreshTokenRepository.deleteExpired();
+    }
 }
+
+export default new RefreshTokenService();
