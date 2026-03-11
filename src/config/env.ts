@@ -16,7 +16,7 @@ export const env = {
     DB_PORT: parseInt(process.env.DB_PORT || '5432', 10),
     DB_NAME: process.env.DB_NAME,
     DB_USER: process.env.DB_USER,
-    DB_PASS: process.env.DB_PASS,
+    DB_PASS: process.env.DB_PASSWORD,
     DB_SSL:  process.env.DB_SSL === 'true',
 
     //JWT
