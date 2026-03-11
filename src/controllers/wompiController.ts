@@ -36,7 +36,13 @@ export const WompiController = {
                 currency,
             });
 
-            res.status(200).json(result);
+            // Devolver todo lo que el widget necesita, incluyendo echo de reference y amountInCents
+            res.status(200).json({
+                ...result,
+                reference,
+                amountInCents: Number(amountInCents),
+                currency,
+            });
         } catch (err: any) {
             res.status(500).json({ message: err.message });
         }

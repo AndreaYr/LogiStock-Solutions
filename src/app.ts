@@ -33,21 +33,28 @@ app.get('/health', (_req, res) => {
 // conecta a la base de datos y luego inicia el servidor
 const startServer = async () => {
     try {
+        console.log('Intentando conectar con la base de datos...');
         await sequelize.authenticate();
-        console.log('DB conectada');
+        console.log('✅ DB conectada');
 
 
         await sequelize.sync();
-        console.log('Tablas sincronizadas');
+        console.log('✅ Tablas sincronizadas');
 
         app.listen(env.PORT, () => {
-            console.log(`Servidor corriendo en puerto ${env.PORT}`);
+            console.log(`🚀 Servidor corriendo en: http://localhost:${env.PORT}`);
         });
 
     } catch (err) {
-        console.error('Error al conectar la base de datos', err);
+        console.error('❌ Error crítico al iniciar el servidor:');
+        console.error(err);
         process.exit(1);
     }
 }
+
+// Capturar errores no manejados
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 startServer();

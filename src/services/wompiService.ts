@@ -18,8 +18,32 @@ const WOMPI_SANDBOX_BASE = 'https://sandbox.wompi.co/v1';
 
 class WompiService {
 
+    /** true cuando el proceso corre en el servidor de Amplify */
+    private get isProduction(): boolean {
+        return env.NODE_ENV === 'production';
+    }
+
+    /** URL base de la API de Wompi según el entorno */
     private get apiBase(): string {
-        return env.NODE_ENV === 'production' ? WOMPI_API_BASE : WOMPI_SANDBOX_BASE;
+        return this.isProduction ? WOMPI_API_BASE : WOMPI_SANDBOX_BASE;
+    }
+
+    /** Set de llaves activo — nunca se mezclan prod y test */
+    private get keys() {
+        if (this.isProduction) {
+            return {
+                publicKey:       env.WOMPI_PUBLIC_KEY,
+                privateKey:      env.WOMPI_PRIVATE_KEY,
+                integritySecret: env.WOMPI_INTEGRITY_SECRET,
+                eventsSecret:    env.WOMPI_EVENTS_SECRET,
+            };
+        }
+        return {
+            publicKey:       env.WOMPI_TEST_PUBLIC_KEY,
+            privateKey:      env.WOMPI_TEST_PRIVATE_KEY,
+            integritySecret: env.WOMPI_TEST_INTEGRITY_SECRET,
+            eventsSecret:    env.WOMPI_TEST_EVENTS_SECRET,
+        };
     }
 
     /**
@@ -32,26 +56,19 @@ class WompiService {
      */
     generateSignature(data: IWompiSignatureRequest): IWompiSignatureResponse {
         const { reference, amountInCents, currency } = data;
+        const { integritySecret, publicKey } = this.keys;
 
-        const chain = `${reference}${amountInCents}${currency}${env.WOMPI_INTEGRITY_SECRET}`;
+        const chain = `${reference}${amountInCents}${currency}${integritySecret}`;
         const signature = createHash('sha256').update(chain).digest('hex');
 
         return {
             signature,
-            publicKey: env.WOMPI_PUBLIC_KEY,
+            publicKey, // siempre corresponde al mismo entorno que integritySecret
         };
     }
 
     /**
      * Verifica que un evento webhook proviene realmente de Wompi.
-     * Wompi incluye un `checksum` calculado con propiedades de la transacción
-     * concatenadas con el secreto de eventos.
-     *
-     * @param transactionId ID de la transacción
-     * @param status Estado de la transacción
-     * @param amountInCents Monto en centavos
-     * @param receivedChecksum Checksum recibido en el header/body del webhook
-     * @returns `true` si el checksum es válido
      */
     verifyWebhookSignature(
         transactionId: string,
@@ -59,7 +76,7 @@ class WompiService {
         amountInCents: number,
         receivedChecksum: string,
     ): boolean {
-        const chain = `${transactionId}${status}${amountInCents}${env.WOMPI_EVENTS_SECRET}`;
+        const chain = `${transactionId}${status}${amountInCents}${this.keys.eventsSecret}`;
         const expectedChecksum = createHash('sha256').update(chain).digest('hex');
         return expectedChecksum === receivedChecksum;
     }
@@ -77,7 +94,7 @@ class WompiService {
         const response = await fetch(url, {
             method: 'GET',
             headers: {
-                Authorization: `Bearer ${env.WOMPI_PRIVATE_KEY}`,
+                Authorization: `Bearer ${this.keys.privateKey}`,
             },
         });
 

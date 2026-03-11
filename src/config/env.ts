@@ -16,17 +16,24 @@ export const env = {
     DB_NAME: process.env.DB_NAME || 'logistock-db',
     DB_USER: process.env.DB_USER || 'postgres',
     DB_PASSWORD: process.env.DB_PASSWORD || '',
+    DB_SSL: process.env.DB_SSL === 'true',
 
     //JWT
     JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET || '',
     JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || '',
     JWT_ACCESS_EXPIRY: process.env.JWT_ACCESS_EXPIRY,
 
-    // PASARELA DE PAGO
-    WOMPI_PUBLIC_KEY: process.env.WOMPI_PUBLIC_KEY || 'pub_test_KNdmFPNZq1JjKmVmpJkABrX1mYujfHG1',
-    WOMPI_PRIVATE_KEY: process.env.WOMPI_PRIVATE_KEY || 'prv_test_nxW2ZTxSxST2Ml1tlt20BXPlC2VbyAwO',
-    WOMPI_INTEGRITY_SECRET: process.env.WOMPI_INTEGRITY_SECRET || 'test_integrity_7rpwUDeBhSd4ecYePRnNHXUY0YtLgEDa',
-    WOMPI_EVENTS_SECRET: process.env.WOMPI_EVENTS_SECRET || 'test_events_egodi8LzBEm4OorHa8d2YUegz6raZBYd',
+    // PASARELA DE PAGO — PRODUCCIÓN
+    WOMPI_PUBLIC_KEY:        process.env.WOMPI_PUBLIC_KEY || '',
+    WOMPI_PRIVATE_KEY:       process.env.WOMPI_PRIVATE_KEY || '',
+    WOMPI_INTEGRITY_SECRET:  process.env.WOMPI_INTEGRITY_SECRET || '',
+    WOMPI_EVENTS_SECRET:     process.env.WOMPI_EVENTS_SECRET || '',
+
+    // PASARELA DE PAGO — TEST / SANDBOX
+    WOMPI_TEST_PUBLIC_KEY:        process.env.WOMPI_TEST_PUBLIC_KEY || 'pub_test_KNdmFPNZq1JjKmVmpJkABrX1mYujfHG1',
+    WOMPI_TEST_PRIVATE_KEY:       process.env.WOMPI_TEST_PRIVATE_KEY || 'prv_test_nxW2ZTxSxST2Ml1tlt20BXPlC2VbyAwO',
+    WOMPI_TEST_INTEGRITY_SECRET:  process.env.WOMPI_TEST_INTEGRITY_SECRET || 'test_integrity_7rpwUDeBhSd4ecYePRnNHXUY0YtLgEDa',
+    WOMPI_TEST_EVENTS_SECRET:     process.env.WOMPI_TEST_EVENTS_SECRET || 'test_events_egodi8LzBEm4OorHa8d2YUegz6raZBYd',
 
     // EMAIL (SMTP - Nodemailer)
     SMTP_HOST: process.env.SMTP_HOST || 'smtp.gmail.com',

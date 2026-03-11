@@ -7,6 +7,8 @@ import Warehouse from './warehouseModel.js';
 import Rental from './rentalModel.js';
 import Notification from './notificationModel.js';
 import Movement from './movementModel.js';
+import Novelty from './noveltyModel.js';
+import ServiceRequest from './serviceRequestModel.js';
 
 // -------------------- Role - User --------------------
 
@@ -127,6 +129,62 @@ Movement.belongsTo(Warehouse, {
     as: 'warehouse'
 });
 
+// -------------------- User - Novelty - Warehouse --------------------
+
+// Un usuario (auxiliar/jefe) reporta novedades
+User.hasMany(Novelty, {
+    foreignKey: 'reportedBy',
+    as: 'novelties',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+Novelty.belongsTo(User, {
+    foreignKey: 'reportedBy',
+    as: 'reporter'
+});
+
+// Una bodega tiene muchas novedades
+Warehouse.hasMany(Novelty, {
+    foreignKey: 'warehouseId',
+    as: 'novelties',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+Novelty.belongsTo(Warehouse, {
+    foreignKey: 'warehouseId',
+    as: 'warehouse'
+});
+
+// -------------------- User - ServiceRequest - Warehouse --------------------
+
+// Un cliente crea solicitudes
+User.hasMany(ServiceRequest, {
+    foreignKey: 'userId',
+    as: 'serviceRequests',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+ServiceRequest.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user'
+});
+
+// Una bodega recibe múltiples solicitudes de sus clientes
+Warehouse.hasMany(ServiceRequest, {
+    foreignKey: 'warehouseId',
+    as: 'serviceRequests',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+
+ServiceRequest.belongsTo(Warehouse, {
+    foreignKey: 'warehouseId',
+    as: 'warehouse'
+});
+
 // PaymentTransaction no tiene FK con otras tablas por diseño:
 // las transacciones de pago se identifican por 'reference' (orden externa)
-export { Role, User, RefreshToken, LoginAttempt, PaymentTransaction, Warehouse, Rental, Notification, Movement };
+export { Role, User, RefreshToken, LoginAttempt, PaymentTransaction, Warehouse, Rental, Notification, Movement, Novelty, ServiceRequest };
