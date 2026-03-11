@@ -17,6 +17,7 @@ export const env = {
     DB_NAME: process.env.DB_NAME,
     DB_USER: process.env.DB_USER,
     DB_PASS: process.env.DB_PASS,
+    DB_SSL:  process.env.DB_SSL === 'true',
 
     //JWT
     JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET || '',
