@@ -22,4 +22,7 @@ router.post('/logout', AuthController.logout);
 router.post('/forgot-password', AuthController.forgotPassword);
 router.post('/reset-password', AuthController.resetPassword);
 
+// Verificación de email (GET con token en query param)
+router.get('/verify-email', AuthController.verifyEmail);
+
 export default router;

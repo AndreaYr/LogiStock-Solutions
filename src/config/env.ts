@@ -8,15 +8,16 @@ export const env = {
     PORT: parseInt(process.env.PORT || '3000', 10),
     NODE_ENV: process.env.NODE_ENV || 'development',
     ALLOWED_ORIGINS: (process.env.ALLOWED_ORIGINS || '').split(','),
-    APP_URL: process.env.APP_URL || 'http://localhost:3000',
+    APP_URL: process.env.APP_URL || 'http://localhost:8080',
+    BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:3000',
 
     //Database
-    DB_HOST: process.env.DB_HOST || 'localhost',
+    DB_HOST: process.env.DB_HOST,
     DB_PORT: parseInt(process.env.DB_PORT || '5432', 10),
-    DB_NAME: process.env.DB_NAME || 'logistock-db',
-    DB_USER: process.env.DB_USER || 'postgres',
-    DB_PASSWORD: process.env.DB_PASSWORD || '',
-    DB_SSL: process.env.DB_SSL === 'true',
+    DB_NAME: process.env.DB_NAME,
+    DB_USER: process.env.DB_USER,
+    DB_PASS: process.env.DB_PASSWORD,
+    DB_SSL:  process.env.DB_SSL === 'true',
 
     //JWT
     JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET || '',
