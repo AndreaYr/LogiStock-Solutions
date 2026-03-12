@@ -51,11 +51,53 @@ export const MovementController = {
         }
     },
 
+    /** GET /api/movements → Listar todos los movimientos o filtrar por warehouseId */
+    async list(req: Request, res: Response): Promise<void> {
+        try {
+            const warehouseId = req.query.warehouseId ? parseInt(req.query.warehouseId as string, 10) : undefined;
+            const options: any = {
+                order: [['createdAt', 'DESC']],
+                include: [
+                    { 
+                        association: 'user', 
+                        attributes: ['id', 'firstName', 'lastName', 'email'] 
+                    },
+                    { 
+                        association: 'warehouse', 
+                        attributes: ['id', 'description'] 
+                    }
+                ]
+            };
+
+            if (warehouseId) {
+                options.where = { warehouseId };
+            }
+
+            const movements = await movementRepo.findAll(options);
+            res.status(200).json(movements);
+        } catch (err: any) {
+            res.status(500).json({ message: err.message });
+        }
+    },
+
     /** GET /api/movements/warehouse/:id → Listar movimientos de una bodega */
     async getByWarehouse(req: Request, res: Response): Promise<void> {
         try {
             const warehouseId = parseInt(req.params.id as string, 10);
-            const movements = await movementRepo.findByWarehouse(warehouseId);
+            const movements = await movementRepo.findAll({
+                where: { warehouseId },
+                order: [['createdAt', 'DESC']],
+                include: [
+                    { 
+                        association: 'user', 
+                        attributes: ['id', 'firstName', 'lastName', 'email'] 
+                    },
+                    { 
+                        association: 'warehouse', 
+                        attributes: ['id', 'description'] 
+                    }
+                ]
+            });
             res.status(200).json(movements);
         } catch (err: any) {
             res.status(500).json({ message: err.message });
