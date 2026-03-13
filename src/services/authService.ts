@@ -212,7 +212,7 @@ class AuthService {
      * - Marca isVerified = true y limpia los campos del token
      * - Envía email de bienvenida al confirmar
      */
-    async verifyEmail(rawToken: string): Promise<void> {
+    async verifyEmail(rawToken: string): Promise<AuthTokens> {
         const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
 
         const user = await userRepo.findOne({
@@ -234,6 +234,10 @@ class AuthService {
         // Enviar email de bienvenida y notificación ahora que la cuenta está confirmada
         sendWelcomeEmail(user.email, user.firstName).catch(console.error);
         notificationService.notifyUserRegistered(user.id, user.firstName).catch(console.error);
+
+        // Emitir tokens para que el usuario quede autenticado directamente
+        const role = await roleRepository.findById(user.roleId);
+        return this._issueTokens(user.id, user.roleId, role?.name ?? UserRole.CLIENTE);
     }
 
     // ─── Privado ──────────────────────────────────────────────────────────────

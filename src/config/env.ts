@@ -42,5 +42,6 @@ export const env = {
     SMTP_USER: process.env.SMTP_USER || '',
     SMTP_PASS: process.env.SMTP_PASS || '',
     EMAIL_FROM: process.env.EMAIL_FROM || 'LogiStock <tu-correo@gmail.com>',
+
 }
 

@@ -133,8 +133,10 @@ export const AuthController = {
         }
 
         try {
-            await authService.verifyEmail(token);
-            res.redirect(`${appUrl}/verify-email?verified=true`);
+            const tokens = await authService.verifyEmail(token);
+            res.redirect(
+                `${appUrl}/verify-email?verified=true&accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`
+            );
         } catch (err: any) {
             const msg = encodeURIComponent(err.message ?? 'Token inválido o expirado');
             res.redirect(`${appUrl}/verify-email?error=${msg}`);
