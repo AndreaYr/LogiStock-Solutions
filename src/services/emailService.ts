@@ -250,6 +250,41 @@ export async function sendLoginAlertEmail(
 }
 
 /**
+ * Envía el código OTP al usuario para completar la autenticación en 2 pasos.
+ * El código expira en 10 minutos.
+ */
+export async function sendOtpEmail(
+  to: string,
+  firstName: string,
+  otpCode: string
+): Promise<void> {
+  const body = `
+      <h2 style="color:#111827;margin-top:0;">Código de verificación</h2>
+      <p style="color:#374151;line-height:1.6;">
+        Hola <strong>${firstName}</strong>, usa el siguiente código para completar
+        tu inicio de sesión en <strong>LogiStock Solutions</strong>.
+      </p>
+      <div style="text-align:center;margin:32px 0;">
+        <div style="display:inline-block;background:#f4f6f8;border:2px dashed #1a56db;border-radius:12px;padding:20px 40px;">
+          <span style="font-size:36px;font-weight:800;letter-spacing:10px;color:#1a56db;">${otpCode}</span>
+        </div>
+      </div>
+      <p style="color:#6b7280;font-size:13px;text-align:center;">
+        Este código expira en <strong>10 minutos</strong>.
+      </p>
+      <p style="color:#dc2626;font-size:13px;text-align:center;">
+        ⚠️ Si no intentaste iniciar sesión, ignora este mensaje y considera cambiar tu contraseña.
+      </p>`;
+
+  await transporter.sendMail({
+    from: env.EMAIL_FROM,
+    to,
+    subject: 'Tu código de verificación — LogiStock Solutions',
+    html: baseLayout('Código de verificación', body),
+  });
+}
+
+/**
  * Envía una notificación genérica de negocio.
  */
 export async function sendNotificationEmail(

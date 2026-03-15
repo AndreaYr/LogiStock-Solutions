@@ -18,6 +18,9 @@ router.post('/login', AuthController.login);
 router.post('/refresh', AuthController.refresh);
 router.post('/logout', AuthController.logout);
 
+// Autenticación en 2 pasos — segunda fase del login
+router.post('/verify-otp', AuthController.verifyOtp);
+
 // Recuperación de contraseña
 router.post('/forgot-password', AuthController.forgotPassword);
 router.post('/reset-password', AuthController.resetPassword);

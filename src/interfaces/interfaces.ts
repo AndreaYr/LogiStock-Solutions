@@ -62,6 +62,8 @@ export interface IUserAttributes {
     resetPasswordExpires: Date | null;
     emailVerificationToken: string | null;    // Token hasheado para verificar el email
     emailVerificationExpires: Date | null;    // Expiración del token (24h)
+    otpCode: string | null;                   // Código OTP hasheado (SHA-256) para 2FA
+    otpExpires: Date | null;                  // Expiración del OTP (10 minutos)
     isActive: boolean;      // Si la cuenta está activa o deshabilitada
     isVerified: boolean;    // Si el email fue verificado
     lastLogin: Date | null; // Ultima vez que inició sesión
@@ -69,8 +71,8 @@ export interface IUserAttributes {
     updatedAt?: Date;
 }
 
-// Atributos opcionales al crear un User: id, phone, lastLogin y campos de verificación de email
-export interface IUserCreationAttributes extends Optional<IUserAttributes, 'id' | 'phone' | 'lastLogin' | 'emailVerificationToken' | 'emailVerificationExpires'> { }
+// Atributos opcionales al crear un User: id, phone, lastLogin, campos de verificación de email y OTP
+export interface IUserCreationAttributes extends Optional<IUserAttributes, 'id' | 'phone' | 'lastLogin' | 'emailVerificationToken' | 'emailVerificationExpires' | 'otpCode' | 'otpExpires'> { }
 
 // Interface final del modelo User
 export interface IUser extends Model<IUserAttributes, IUserCreationAttributes>, IUserAttributes { }

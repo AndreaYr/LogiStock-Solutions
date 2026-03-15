@@ -18,6 +18,8 @@ class User extends Model<IUserAttributes, IUserCreationAttributes> implements IU
     declare resetPasswordExpires: Date | null;
     declare emailVerificationToken: string | null;    // Token hasheado para verificar el email
     declare emailVerificationExpires: Date | null;    // Expiración del token (24h)
+    declare otpCode: string | null;                   // Código OTP hasheado (SHA-256) para 2FA
+    declare otpExpires: Date | null;                  // Expiración del OTP (10 minutos)
     declare isActive: boolean;
     declare isVerified: boolean;
     declare lastLogin: Date | null;
@@ -103,7 +105,21 @@ User.init(
             defaultValue: null,
             comment: 'Fecha de expiración del token de verificación de email (24h)',
         },
-        // Indica si la cuenta eestá habilitada o deshabilitada por el admin.
+        // Código OTP hasheado (SHA-256) generado al iniciar sesión para la verificación en 2 pasos
+        otpCode: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            comment: 'Código OTP hasheado para autenticación en 2 pasos',
+        },
+        // Fecha de expiración del OTP (10 minutos desde su generación)
+        otpExpires: {
+            type: DataTypes.DATE,
+            allowNull: true,
+            defaultValue: null,
+            comment: 'Fecha de expiración del OTP (10 minutos)',
+        },
+        // Indica si la cuenta está habilitada o deshabilitada por el admin.
         isActive: {
             type: DataTypes.BOOLEAN,
             allowNull: false,

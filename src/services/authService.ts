@@ -9,7 +9,7 @@ import { RefreshTokenRepository } from '../repositories/refreshTokenRepositories
 import { LoginAttemptRepository } from '../repositories/loginAttemptRepositories.js';
 import roleRepository from '../repositories/roleRepositories.js';
 import tokenService from './tokenService.js';
-import { sendWelcomeEmail, sendVerificationEmail, sendLoginAlertEmail, sendPasswordResetEmail, sendPasswordChangedEmail } from './emailService.js';
+import { sendWelcomeEmail, sendVerificationEmail, sendLoginAlertEmail, sendPasswordResetEmail, sendPasswordChangedEmail, sendOtpEmail } from './emailService.js';
 import notificationService from './notificationService.js';
 import { UserRole } from '../interfaces/interfaces.js';
 import { env } from '../config/env.js';
@@ -87,16 +87,15 @@ class AuthService {
     }
 
     /**
-     * Autentica al usuario y devuelve los tokens.
-     * Registra el intento en login_attempts.
-     * Bloquea la cuenta tras MAX_FAILED_ATTEMPTS intentos fallidos.
+     * Primera fase del login: valida credenciales y envía OTP al correo.
+     * No devuelve tokens — el usuario debe completar el segundo paso con verifyOtp().
      */
-    async login(dto: LoginDto): Promise<AuthTokens> {
+    async login(dto: LoginDto): Promise<{ otpRequired: true }> {
         const { email, password, ipAddress, userAgent } = dto;
 
         const user = await userRepo.findByEmail(email);
 
-        // Contar intentos fallidos recientes
+        // Contar intentos fallidos recientes y bloquear si supera el límite
         if (user) {
             const failedCount = await loginAttemptRepo.countFailedByEmail(email);
             if (failedCount >= MAX_FAILED_ATTEMPTS) {
@@ -125,11 +124,51 @@ class AuthService {
         // Bloquear login si el email no ha sido verificado
         if (!user.isVerified) throw new Error('Debes verificar tu email antes de iniciar sesión. Revisa tu bandeja de entrada.');
 
-        // Registrar intento exitoso
-        await loginAttemptRepo.create({ userId: user.id, email, success: true, ipAddress, userAgent, attemptedAt: new Date() });
-        await userRepo.update(user.id, { lastLogin: new Date() });
+        // Generar OTP de 6 dígitos, hashearlo y guardarlo con expiración de 10 minutos
+        const rawOtp    = Math.floor(100000 + Math.random() * 900000).toString();
+        const hashedOtp = crypto.createHash('sha256').update(rawOtp).digest('hex');
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
 
-        // Notificación de alerta de acceso (no bloquea si falla)
+        await userRepo.update(user.id, { otpCode: hashedOtp, otpExpires });
+
+        // Enviar OTP al correo (no bloquea el flujo si falla)
+        sendOtpEmail(user.email, user.firstName, rawOtp).catch(console.error);
+
+        return { otpRequired: true };
+    }
+
+    /**
+     * Segunda fase del login: valida el OTP ingresado por el usuario.
+     * Si es correcto y no ha expirado, emite los tokens de sesión.
+     */
+    async verifyOtp(email: string, code: string, ipAddress: string, userAgent?: string): Promise<AuthTokens> {
+        const user = await userRepo.findByEmail(email);
+
+        if (!user || !user.otpCode || !user.otpExpires) {
+            throw new Error('Sesión OTP no encontrada. Inicia sesión nuevamente.');
+        }
+
+        // Verificar expiración del OTP
+        if (user.otpExpires < new Date()) {
+            await userRepo.update(user.id, { otpCode: null, otpExpires: null });
+            throw new Error('El código ha expirado. Inicia sesión nuevamente.');
+        }
+
+        // Comparar el código ingresado con el hash guardado
+        const hashedInput = crypto.createHash('sha256').update(code).digest('hex');
+        if (hashedInput !== user.otpCode) {
+            throw new Error('Código incorrecto.');
+        }
+
+        // OTP válido — limpiar campos y completar el login
+        await userRepo.update(user.id, {
+            otpCode: null,
+            otpExpires: null,
+            lastLogin: new Date(),
+        });
+
+        // Registrar intento exitoso y enviar alertas
+        await loginAttemptRepo.create({ userId: user.id, email, success: true, ipAddress, userAgent, attemptedAt: new Date() });
         sendLoginAlertEmail(user.email, user.firstName, ipAddress, userAgent ?? null).catch(console.error);
         notificationService.notifyLogin(user.id, ipAddress).catch(console.error);
 
