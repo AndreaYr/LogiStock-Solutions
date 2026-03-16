@@ -11,6 +11,10 @@ class ServiceRequest extends Model<IServiceRequestAttributes, IServiceRequestCre
     declare quantity: number | null;
     declare description: string | null;
     declare status: ServiceRequestStatus;
+    declare scheduledDate: string | null;
+    declare scheduledTime: string | null;
+    declare rejectionReason: string | null;
+    declare assignedAuxiliaryId: number | null;
     declare readonly createdAt: Date;
     declare readonly updatedAt: Date;
 }
@@ -62,6 +66,28 @@ ServiceRequest.init(
             type: DataTypes.ENUM(...Object.values(ServiceRequestStatus)),
             allowNull: false,
             defaultValue: ServiceRequestStatus.PENDING,
+        },
+        scheduledDate: {
+            type: DataTypes.STRING(10),  // YYYY-MM-DD format
+            allowNull: true,
+        },
+        scheduledTime: {
+            type: DataTypes.STRING(5),   // HH:mm format
+            allowNull: true,
+        },
+        rejectionReason: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+        },
+        assignedAuxiliaryId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: 'users',
+                key: 'id',
+            },
+            onDelete: 'SET NULL',
+            onUpdate: 'CASCADE',
         },
     },
     {

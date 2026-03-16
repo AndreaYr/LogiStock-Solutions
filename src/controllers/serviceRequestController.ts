@@ -5,6 +5,29 @@ import { ServiceRequestStatus, ServiceRequestType } from '../interfaces/serviceR
 const serviceRequestService = new ServiceRequestService();
 
 export class ServiceRequestController {
+    /** GET /api/service-requests/all — todas las solicitudes del sistema (admin/jefe_bodega) */
+    static async getAllRequests(req: Request, res: Response): Promise<void> {
+        try {
+            const status = req.query.status as string | undefined;
+            const requests = await serviceRequestService.listAllRequests(status);
+            res.status(200).json(requests);
+        } catch (err: any) {
+            res.status(500).json({ message: err.message });
+        }
+    }
+
+    /** GET /api/service-requests/me — todas las solicitudes del cliente autenticado */
+    static async getMine(req: Request, res: Response): Promise<void> {
+        try {
+            const userId = req.user!.userId;
+            const status = req.query.status as string | undefined;
+            const requests = await serviceRequestService.listMyRequests(userId, status);
+            res.status(200).json(requests);
+        } catch (err: any) {
+            res.status(500).json({ message: err.message });
+        }
+    }
+
     /** GET /api/service-requests?warehouseId={id} */
     static async getAll(req: Request, res: Response): Promise<void> {
         try {
@@ -53,15 +76,40 @@ export class ServiceRequestController {
     static async updateStatus(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const { status } = req.body;
+            const { status, rejectionReason, assignedAuxiliaryId } = req.body;
+            const updatedByUserId = req.user?.userId;
 
             if (!status || !Object.values(ServiceRequestStatus).includes(status)) {
                 res.status(400).json({ message: 'Estado inválido' });
                 return;
             }
 
-            const updatedRequest = await serviceRequestService.updateStatus(Number(id), status as ServiceRequestStatus);
+            const updatedRequest = await serviceRequestService.updateStatus(
+                Number(id),
+                status as ServiceRequestStatus,
+                rejectionReason,
+                assignedAuxiliaryId,
+                updatedByUserId
+            );
             res.status(200).json(updatedRequest);
+        } catch (err: any) {
+            res.status(400).json({ message: err.message });
+        }
+    }
+
+    /** PATCH /api/service-requests/:id/assign-auxiliary → Asignar un auxiliar a una orden aprobada */
+    static async assignAuxiliary(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            const { auxiliaryId } = req.body;
+
+            if (!auxiliaryId) {
+                res.status(400).json({ message: 'auxiliaryId es requerido' });
+                return;
+            }
+
+            const updated = await serviceRequestService.assignAuxiliary(Number(id), Number(auxiliaryId));
+            res.status(200).json(updated);
         } catch (err: any) {
             res.status(400).json({ message: err.message });
         }

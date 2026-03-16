@@ -3,12 +3,31 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { env } from '../config/env.js';
 
+const baseAllowedOrigins = env.ALLOWED_ORIGINS.filter(Boolean);
+
+const mobileAllowedOrigins = [
+    'capacitor://localhost',
+    'http://localhost',
+    'https://localhost',
+];
+
+const allowedOrigins = new Set([...baseAllowedOrigins, ...mobileAllowedOrigins]);
+
 // Configuración de Helmet para Security Headers
 export const securityHeaders = helmet();
 
 // Configuración de CORS
 export const corsConfig = cors({
-    origin: env.ALLOWED_ORIGINS, // Utiliza orígenes definidos en el .env
+    origin: (origin, callback) => {
+        // Permite requests server-to-server o tools sin header Origin
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.has(origin)) {
+            return callback(null, true);
+        }
+
+        return callback(new Error(`Origen no permitido por CORS: ${origin}`));
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,

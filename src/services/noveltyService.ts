@@ -44,7 +44,7 @@ export class NoveltyService {
      * Crear una nueva novedad.
      * Solo auxiliar o jefe de bodega (validado por roles en ruta).
      */
-    async createNovelty(userId: number, data: { warehouseId: number, type: NoveltyType, product: string, quantity: number, description?: string }) {
+    async createNovelty(userId: number, data: { warehouseId: number, type: NoveltyType, product: string, quantity: number, description?: string }, photos?: any[]) {
         // Validar que la bodega exista
         const warehouse = await Warehouse.findByPk(data.warehouseId);
         if (!warehouse) {
@@ -55,7 +55,8 @@ export class NoveltyService {
             ...data,
             reportedBy: userId,
             status: NoveltyStatus.PENDING,
-            description: data.description || null
+            description: data.description || null,
+            photos: photos || []
         });
     }
 

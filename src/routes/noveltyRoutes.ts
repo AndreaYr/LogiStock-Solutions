@@ -22,8 +22,8 @@ router.post('/', authorize(UserRole.JEFE_BODEGA, UserRole.AUXILIAR), NoveltyCont
 
 /**
  * Actualizar estado de novedad
- * Roles permitidos: admin
+ * Roles permitidos: admin, jefe_bodega
  */
-router.patch('/:id', authorize(UserRole.ADMIN), NoveltyController.updateStatus);
+router.patch('/:id', authorize(UserRole.ADMIN, UserRole.JEFE_BODEGA), NoveltyController.updateStatus);
 
 export default router;

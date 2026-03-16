@@ -9,6 +9,18 @@ const router = Router();
 router.use(authenticate);
 
 /**
+ * Listar todas las solicitudes del sistema (sin filtro de bodega)
+ * Roles permitidos: admin, jefe_bodega
+ */
+router.get('/all', authorize(UserRole.ADMIN, UserRole.JEFE_BODEGA), ServiceRequestController.getAllRequests);
+
+/**
+ * Listar TODAS las solicitudes del cliente autenticado (sin filtro de bodega)
+ * Roles permitidos: todos
+ */
+router.get('/me', ServiceRequestController.getMine);
+
+/**
  * Listar solicitudes de una bodega
  * Roles permitidos: client (solo ve las suyas), admin, jefe_bodega, auxiliar
  */
@@ -25,5 +37,11 @@ router.post('/', authorize(UserRole.CLIENTE), ServiceRequestController.create);
  * Roles permitidos: admin, jefe_bodega
  */
 router.patch('/:id', authorize(UserRole.ADMIN, UserRole.JEFE_BODEGA), ServiceRequestController.updateStatus);
+
+/**
+ * Asignar un auxiliar a una orden aprobada
+ * Roles permitidos: admin, jefe_bodega
+ */
+router.patch('/:id/assign-auxiliary', authorize(UserRole.ADMIN, UserRole.JEFE_BODEGA), ServiceRequestController.assignAuxiliary);
 
 export default router;

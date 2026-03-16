@@ -9,10 +9,18 @@ import userService from '../services/userService.js';
 
 export const UserController = {
 
-    /** GET /api/users  → solo ADMIN */
+    /** GET /api/users  → solo ADMIN, con soporte para query param role */
     async findAll(req: Request, res: Response): Promise<void> {
         try {
-            const users = await userService.findAll();
+            const role = req.query.role as string | undefined;
+            
+            let users;
+            if (role) {
+                users = await userService.findByRole(role);
+            } else {
+                users = await userService.findAll();
+            }
+            
             res.status(200).json(users);
         } catch (err: any) {
             res.status(500).json({ message: err.message });

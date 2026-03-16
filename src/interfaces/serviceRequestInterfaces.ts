@@ -22,10 +22,14 @@ export interface IServiceRequestAttributes {
     quantity: number | null;    // Aplicable para INBOUND / OUTBOUND
     description: string | null;
     status: ServiceRequestStatus;
+    scheduledDate?: string | null;  // Fecha agendada por el cliente (YYYY-MM-DD)
+    scheduledTime?: string | null;  // Hora agendada (HH:mm)
+    rejectionReason?: string | null;  // Razón de rechazo si status = REJECTED
+    assignedAuxiliaryId?: number | null;  // FK a user (rol AUXILIARY)
     createdAt?: Date;
     updatedAt?: Date;
 }
 
-export interface IServiceRequestCreationAttributes extends Optional<IServiceRequestAttributes, 'id' | 'status' | 'product' | 'quantity' | 'description' | 'createdAt' | 'updatedAt'> { }
+export interface IServiceRequestCreationAttributes extends Optional<IServiceRequestAttributes, 'id' | 'status' | 'product' | 'quantity' | 'description' | 'scheduledDate' | 'scheduledTime' | 'rejectionReason' | 'assignedAuxiliaryId' | 'createdAt' | 'updatedAt'> { }
 
 export interface IServiceRequest extends Model<IServiceRequestAttributes, IServiceRequestCreationAttributes>, IServiceRequestAttributes { }

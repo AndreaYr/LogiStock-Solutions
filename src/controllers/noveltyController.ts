@@ -30,7 +30,8 @@ export class NoveltyController {
     static async create(req: Request, res: Response): Promise<void> {
         try {
             const userId = req.user!.userId;
-            const novelty = await noveltyService.createNovelty(userId, req.body);
+            const { photos } = req.body;
+            const novelty = await noveltyService.createNovelty(userId, req.body, photos);
             res.status(201).json(novelty);
         } catch (err: any) {
             res.status(400).json({ message: err.message });

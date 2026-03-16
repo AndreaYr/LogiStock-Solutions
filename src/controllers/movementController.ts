@@ -11,7 +11,7 @@ export const MovementController = {
     async create(req: Request, res: Response): Promise<void> {
         try {
             const { userId } = req.user!;
-            const { warehouseId, type, product, quantity, description } = req.body;
+            const { warehouseId, type, product, quantity, description, serviceRequestId, photos, observations } = req.body;
 
             if (!warehouseId || !type || !product || !quantity) {
                 res.status(400).json({ message: 'warehouseId, type, product y quantity son requeridos.' });
@@ -33,6 +33,9 @@ export const MovementController = {
                 product,
                 quantity,
                 description: description ?? null,
+                serviceRequestId: serviceRequestId ?? null,
+                photos: photos ?? [],
+                observations: observations ?? null,
             });
 
             // Disparar notificación
@@ -55,6 +58,8 @@ export const MovementController = {
     async list(req: Request, res: Response): Promise<void> {
         try {
             const warehouseId = req.query.warehouseId ? parseInt(req.query.warehouseId as string, 10) : undefined;
+            console.log('GET /movements - warehouseId:', warehouseId);
+            
             const options: any = {
                 order: [['createdAt', 'DESC']],
                 include: [
@@ -74,6 +79,7 @@ export const MovementController = {
             }
 
             const movements = await movementRepo.findAll(options);
+            console.log('Movimientos encontrados:', movements.length);
             res.status(200).json(movements);
         } catch (err: any) {
             res.status(500).json({ message: err.message });

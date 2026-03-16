@@ -1,5 +1,7 @@
 import { BaseRepository } from "./baseRepositories.js";
 import { ServiceRequest } from "../models/index.js";
+import User from "../models/userModel.js";
+import Warehouse from "../models/warehouseModel.js";
 
 export class ServiceRequestRepository extends BaseRepository<ServiceRequest> {
     constructor() {
@@ -12,6 +14,10 @@ export class ServiceRequestRepository extends BaseRepository<ServiceRequest> {
                 warehouseId,
                 ...filters
             },
+            include: [
+                { model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email'] },
+                { model: Warehouse, as: 'warehouse', attributes: ['id', 'name', 'description'] }
+            ],
             order: [['createdAt', 'DESC']]
         });
     }
@@ -22,6 +28,22 @@ export class ServiceRequestRepository extends BaseRepository<ServiceRequest> {
                 userId,
                 ...filters
             },
+            include: [
+                { model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email'] },
+                { model: Warehouse, as: 'warehouse', attributes: ['id', 'name', 'description'] }
+            ],
+            order: [['createdAt', 'DESC']]
+        });
+    }
+
+    /** Listar todas las solicitudes (admin/jefe_bodega), opcionalmente filtrar por status */
+    async findAll(filters: any = {}) {
+        return await ServiceRequest.findAll({
+            where: filters,
+            include: [
+                { model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email'] },
+                { model: Warehouse, as: 'warehouse', attributes: ['id', 'name', 'description'] }
+            ],
             order: [['createdAt', 'DESC']]
         });
     }

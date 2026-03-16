@@ -20,7 +20,7 @@ const router = Router();
 // Todos los endpoints de usuarios requieren estar autenticado
 router.use(authenticate);
 
-router.get('/',                         authorize(UserRole.ADMIN),                       UserController.findAll);
+router.get('/',                         authorize(UserRole.ADMIN, UserRole.JEFE_BODEGA),                       UserController.findAll);
 router.get('/me',                                                                         UserController.me);
 router.get('/:id',                                                                        UserController.findById);
 router.put('/:id',                                                                        UserController.updateProfile);

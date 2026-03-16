@@ -14,6 +14,7 @@ import notificationRoutes from './notificationRoutes.js';
 import movementRoutes from './movementRoutes.js';
 import noveltyRoutes from './noveltyRoutes.js';
 import serviceRequestRoutes from './serviceRequestRoutes.js';
+import reportRoutes from './reportRoutes.js';
 
 const router = Router();
 
@@ -27,6 +28,7 @@ router.use('/notifications', notificationRoutes);
 router.use('/movements', movementRoutes);
 router.use('/novelties', noveltyRoutes);
 router.use('/service-requests', serviceRequestRoutes);
+router.use('/reports', reportRoutes);
 
 export default router;
 

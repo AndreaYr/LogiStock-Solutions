@@ -13,5 +13,15 @@ export const RentalController = {
         } catch (err: any) {
             res.status(500).json({ message: err.message });
         }
+    },
+
+    /** GET /api/rentals → All rentals with client and warehouse info (admin/jefe_bodega) */
+    async getAll(req: Request, res: Response): Promise<void> {
+        try {
+            const rentals = await rentalRepo.findAllWithDetails();
+            res.status(200).json(rentals);
+        } catch (err: any) {
+            res.status(500).json({ message: err.message });
+        }
     }
 };
