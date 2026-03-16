@@ -13,6 +13,10 @@ export type NotificationType =
     | 'login_detected'      // Inicio de sesión detectado
     | 'user_registered'     // Nuevo usuario registrado
     | 'inventory_movement'  // Entrada, salida o traslado de productos
+    | 'application_submitted'  // Cliente envió solicitud de arrendamiento
+    | 'application_approved'   // Admin aprobó la solicitud
+    | 'application_rejected'   // Admin rechazó la solicitud
+    | 'application_flagged'    // Solicitud marcada por OFAC/ONU
     | 'system';             // Mensaje del sistema / admin
 
 export interface INotificationAttributes {
@@ -69,6 +73,10 @@ Notification.init(
                 'login_detected',
                 'user_registered',
                 'inventory_movement',
+                'application_submitted',
+                'application_approved',
+                'application_rejected',
+                'application_flagged',
                 'system'
             ),
             allowNull: false,

@@ -9,6 +9,8 @@ import Notification from './notificationModel.js';
 import Movement from './movementModel.js';
 import Novelty from './noveltyModel.js';
 import ServiceRequest from './serviceRequestModel.js';
+import RentalApplication from './rentalApplicationModel.js';
+import RentalContract from './rentalContractModel.js';
 
 // -------------------- Role - User --------------------
 
@@ -185,6 +187,75 @@ ServiceRequest.belongsTo(Warehouse, {
     as: 'warehouse'
 });
 
+// -------------------- User - RentalApplication - Warehouse --------------------
+
+// Un usuario puede tener muchas solicitudes de arrendamiento
+User.hasMany(RentalApplication, {
+    foreignKey: 'userId',
+    as: 'rentalApplications',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+});
+
+RentalApplication.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user',
+});
+
+// Una bodega puede recibir muchas solicitudes de arrendamiento
+Warehouse.hasMany(RentalApplication, {
+    foreignKey: 'warehouseId',
+    as: 'rentalApplications',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+});
+
+RentalApplication.belongsTo(Warehouse, {
+    foreignKey: 'warehouseId',
+    as: 'warehouse',
+});
+
+// -------------------- RentalApplication - RentalContract --------------------
+
+// Una solicitud aprobada genera exactamente un contrato
+RentalApplication.hasOne(RentalContract, {
+    foreignKey: 'applicationId',
+    as: 'contract',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+});
+
+RentalContract.belongsTo(RentalApplication, {
+    foreignKey: 'applicationId',
+    as: 'application',
+});
+
+// Un cliente puede tener muchos contratos
+User.hasMany(RentalContract, {
+    foreignKey: 'userId',
+    as: 'rentalContracts',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+});
+
+RentalContract.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user',
+});
+
+// Una bodega puede tener muchos contratos
+Warehouse.hasMany(RentalContract, {
+    foreignKey: 'warehouseId',
+    as: 'rentalContracts',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+});
+
+RentalContract.belongsTo(Warehouse, {
+    foreignKey: 'warehouseId',
+    as: 'warehouse',
+});
+
 // PaymentTransaction no tiene FK con otras tablas por diseño:
 // las transacciones de pago se identifican por 'reference' (orden externa)
-export { Role, User, RefreshToken, LoginAttempt, PaymentTransaction, Warehouse, Rental, Notification, Movement, Novelty, ServiceRequest };
+export { Role, User, RefreshToken, LoginAttempt, PaymentTransaction, Warehouse, Rental, Notification, Movement, Novelty, ServiceRequest, RentalApplication, RentalContract };

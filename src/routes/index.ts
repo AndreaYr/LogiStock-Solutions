@@ -14,6 +14,8 @@ import notificationRoutes from './notificationRoutes.js';
 import movementRoutes from './movementRoutes.js';
 import noveltyRoutes from './noveltyRoutes.js';
 import serviceRequestRoutes from './serviceRequestRoutes.js';
+import rentalApplicationRoutes from './rentalApplicationRoutes.js';
+import rentalContractRoutes from './rentalContractRoutes.js';
 
 const router = Router();
 
@@ -27,6 +29,8 @@ router.use('/notifications', notificationRoutes);
 router.use('/movements', movementRoutes);
 router.use('/novelties', noveltyRoutes);
 router.use('/service-requests', serviceRequestRoutes);
+router.use('/rental-applications', rentalApplicationRoutes);
+router.use('/contracts', rentalContractRoutes);
 
 export default router;
 

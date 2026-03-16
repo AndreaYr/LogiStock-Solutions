@@ -8,6 +8,8 @@ import notificationRepo from '../repositories/notificationRepositories.js';
 import { UserRepository } from '../repositories/userRepositories.js';
 import { sendNotificationEmail } from './emailService.js';
 import type { NotificationType } from '../models/notificationModel.js';
+import Role from '../models/roleModel.js';
+import User from '../models/userModel.js';
 
 const userRepo = new UserRepository();
 
@@ -119,6 +121,46 @@ class NotificationService {
         );
     }
 
+    /** Llamar cuando el cliente envía una solicitud de arrendamiento */
+    async notifyApplicationSubmitted(userId: number, warehouseName: string) {
+        return this.create(
+            userId,
+            'application_submitted',
+            'Solicitud recibida',
+            `Tu solicitud para arrendar "${warehouseName}" fue enviada exitosamente. El equipo la revisará pronto.`
+        );
+    }
+
+    /** Llamar cuando el admin aprueba una solicitud */
+    async notifyApplicationApproved(userId: number, warehouseName: string) {
+        return this.create(
+            userId,
+            'application_approved',
+            '¡Solicitud aprobada!',
+            `Tu solicitud para arrendar "${warehouseName}" fue aprobada. Ya puedes proceder con la firma del contrato.`
+        );
+    }
+
+    /** Llamar cuando el admin rechaza una solicitud */
+    async notifyApplicationRejected(userId: number, warehouseName: string, reason: string) {
+        return this.create(
+            userId,
+            'application_rejected',
+            'Solicitud rechazada',
+            `Tu solicitud para arrendar "${warehouseName}" fue rechazada. Motivo: ${reason}`
+        );
+    }
+
+    /** Llamar cuando OFAC/ONU marca al solicitante */
+    async notifyApplicationFlagged(userId: number, warehouseName: string) {
+        return this.create(
+            userId,
+            'application_flagged',
+            'Solicitud no procesada',
+            `Tu solicitud para arrendar "${warehouseName}" no pudo ser procesada. Comunícate con soporte para más información.`
+        );
+    }
+
     /** Llamar cuando hay un movimiento de inventario */
     async notifyMovement(userId: number, type: 'entrada' | 'salida' | 'traslado', product: string, quantity: number, warehouse: string) {
         let msg = '';
@@ -129,6 +171,18 @@ class NotificationService {
         else msg = `Se realizó un traslado de ${quantity} unidades de "${product}".`;
 
         return this.create(userId, 'inventory_movement', title, msg);
+    }
+
+    /** Notifica a todos los usuarios con rol admin */
+    async notifyAllAdmins(type: NotificationType, title: string, message: string): Promise<void> {
+        try {
+            const adminRole = await Role.findOne({ where: { name: 'admin' } });
+            if (!adminRole) return;
+            const admins = await User.findAll({ where: { roleId: adminRole.id, isActive: true } });
+            await Promise.all(admins.map(admin => this.create(admin.id, type, title, message)));
+        } catch (err) {
+            console.error('[NotificationService] Error notificando admins:', err);
+        }
     }
 }
 
