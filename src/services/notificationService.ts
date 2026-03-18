@@ -182,6 +182,9 @@ class NotificationService {
             await Promise.all(admins.map(admin => this.create(admin.id, type, title, message)));
         } catch (err) {
             console.error('[NotificationService] Error notificando admins:', err);
+        }
+    }
+
     /**
      * Notificar a todos los jefes de bodega sobre una nueva solicitud de servicio.
      * Se llama cuando un cliente crea una nueva solicitud (Ingreso, Retiro, Cancelación).
