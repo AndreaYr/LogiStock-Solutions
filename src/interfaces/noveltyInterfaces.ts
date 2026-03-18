@@ -22,11 +22,12 @@ export interface INoveltyAttributes {
     product: string;
     quantity: number;
     description: string | null;
+    photos?: any[] | null;  // Array de fotos (URL o ruta local)
     status: NoveltyStatus;
     createdAt?: Date;
     updatedAt?: Date;
 }
 
-export interface INoveltyCreationAttributes extends Optional<INoveltyAttributes, 'id' | 'status' | 'description' | 'createdAt' | 'updatedAt'> { }
+export interface INoveltyCreationAttributes extends Optional<INoveltyAttributes, 'id' | 'status' | 'description' | 'photos' | 'createdAt' | 'updatedAt'> { }
 
 export interface INovelty extends Model<INoveltyAttributes, INoveltyCreationAttributes>, INoveltyAttributes { }

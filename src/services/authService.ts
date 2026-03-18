@@ -172,8 +172,12 @@ class AuthService {
         sendLoginAlertEmail(user.email, user.firstName, ipAddress, userAgent ?? null).catch(console.error);
         notificationService.notifyLogin(user.id, ipAddress).catch(console.error);
 
+        console.log(`Login: user.id=${user.id}, user.roleId=${user.roleId}`);
         const role = await roleRepository.findById(user.roleId);
-        return this._issueTokens(user.id, user.roleId, role?.name ?? UserRole.CLIENTE);
+        console.log(`Login: role found?`, !!role, role?.name);
+        const roleName = role?.name ?? UserRole.CLIENTE;
+        console.log(`Login: roleName=${roleName}`);
+        return this._issueTokens(user.id, user.roleId, roleName);
     }
 
     /**

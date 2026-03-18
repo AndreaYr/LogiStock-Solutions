@@ -29,6 +29,21 @@ class UserService {
         });
     }
 
+    /** Lista usuarios filtrando por role (a través de la asociación con roles) */
+    async findByRole(role: string) {
+        return (await userRepo.findAll({
+            attributes: { exclude: ['password'] },
+            include: [
+                {
+                    association: 'role',
+                    where: { roleName: role },
+                    attributes: ['id', 'roleName'],
+                    required: true,
+                }
+            ],
+        })) as any;
+    }
+
     /** Obtiene un usuario por ID sin exponer la contraseña */
     async findById(id: number) {
         const user = await userRepo.findById(id, {

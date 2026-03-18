@@ -3,6 +3,12 @@ import sequelize from '../config/database.js';
 
 export type MovementType = 'ENTRADA' | 'SALIDA' | 'TRASLADO';
 
+export type PhotoData = {
+    url: string;
+    uploadedAt: string;
+    description?: string;
+};
+
 export interface IMovementAttributes {
     id: number;
     warehouseId: number;
@@ -11,11 +17,14 @@ export interface IMovementAttributes {
     product: string;
     quantity: number;
     description: string | null;
+    serviceRequestId?: number | null;  // FK a service_requests, solo cuando se ejecuta una orden aprobada
+    photos?: PhotoData[] | null;  // Array de fotos (JSON)
+    observations?: string | null;  // Observaciones adicionales del auxiliar
     createdAt?: Date;
     updatedAt?: Date;
 }
 
-export interface IMovementCreationAttributes extends Optional<IMovementAttributes, 'id' | 'description'> { }
+export interface IMovementCreationAttributes extends Optional<IMovementAttributes, 'id' | 'description' | 'serviceRequestId' | 'photos' | 'observations'> { }
 
 class Movement extends Model<IMovementAttributes, IMovementCreationAttributes> implements IMovementAttributes {
     declare id: number;
@@ -25,6 +34,9 @@ class Movement extends Model<IMovementAttributes, IMovementCreationAttributes> i
     declare product: string;
     declare quantity: number;
     declare description: string | null;
+    declare serviceRequestId: number | null;
+    declare photos: PhotoData[] | null;
+    declare observations: string | null;
     declare readonly createdAt: Date;
     declare readonly updatedAt: Date;
 }
@@ -59,6 +71,22 @@ Movement.init({
     },
     description: {
         type: DataTypes.STRING(255),
+        allowNull: true,
+    },
+    serviceRequestId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: { model: 'service_requests', key: 'id' },
+        onDelete: 'SET NULL',
+        onUpdate: 'CASCADE',
+    },
+    photos: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        defaultValue: [],
+    },
+    observations: {
+        type: DataTypes.TEXT,
         allowNull: true,
     }
 }, {

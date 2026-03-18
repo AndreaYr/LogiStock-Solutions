@@ -10,6 +10,7 @@ class Novelty extends Model<INoveltyAttributes, INoveltyCreationAttributes> impl
     declare product: string;
     declare quantity: number;
     declare description: string | null;
+    declare photos: any[] | null;
     declare status: NoveltyStatus;
     declare readonly createdAt: Date;
     declare readonly updatedAt: Date;
@@ -57,6 +58,11 @@ Novelty.init(
         description: {
             type: DataTypes.TEXT,
             allowNull: true,
+        },
+        photos: {
+            type: DataTypes.JSON,
+            allowNull: true,
+            defaultValue: [],
         },
         status: {
             type: DataTypes.ENUM(...Object.values(NoveltyStatus)),
