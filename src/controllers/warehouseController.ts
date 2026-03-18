@@ -7,9 +7,17 @@ const warehouseRepo = new WarehouseRepository();
  * Transforma un modelo Warehouse al formato que espera el frontend.
  */
 function toFrontendFormat(w: any) {
-    const totalArea = w.storageLength && w.storageWidth
-        ? Number(w.storageLength) * Number(w.storageWidth)
-        : 0;
+    // Convertir a números si vienen como strings o decimales
+    const length = Number(w.storageLength ?? 0);
+    const width = Number(w.storageWidth ?? 0);
+    const height = Number(w.storageHeight ?? 0);
+    const usable = Number(w.usableArea ?? 0);
+    
+    // Calcular área total si tenemos dimensiones
+    const totalArea = (length > 0 && width > 0) ? length * width : usable;
+    
+    // Determinar el área final: usar usableArea si existe, sino el cálculo
+    const finalArea = usable > 0 ? usable : totalArea;
 
     return {
         id: w.id,
@@ -25,11 +33,11 @@ function toFrontendFormat(w: any) {
         city: w.city ?? null,
         postalCode: w.postalCode ?? null,
         // ── Dimensiones ─────────────────────────────────────
-        storageLength: w.storageLength ?? null,
-        storageWidth: w.storageWidth ?? null,
-        storageHeight: w.storageHeight ?? null,
-        usableArea: w.usableArea ?? null,
-        area: w.usableArea ?? totalArea,                  // área preferida para el front
+        storageLength: length || null,
+        storageWidth: width || null,
+        storageHeight: height || null,
+        usableArea: usable || null,
+        area: finalArea,                  // área preferida para el front, garantizado número
         // ── Ocupación ───────────────────────────────────────
         capacityOccupied: Number(w.capacityOccupied ?? 0),
         capacidadOcupado: Number(w.capacityOccupied ?? 0), // alias español

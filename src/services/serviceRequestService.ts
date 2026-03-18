@@ -86,7 +86,8 @@ export class ServiceRequestService {
             }
         }
 
-        return await serviceRequestRepo.create({
+        // Crear la solicitud
+        const newRequest = await serviceRequestRepo.create({
             warehouseId: data.warehouseId,
             userId,
             type: data.type,
@@ -95,6 +96,30 @@ export class ServiceRequestService {
             description: data.description || null,
             status: ServiceRequestStatus.PENDING
         });
+
+        // Notificar a los jefes de bodega sobre la nueva solicitud
+        try {
+            const client = await User.findByPk(userId);
+            const clientName = client 
+                ? `${client.firstName} ${client.lastName}` 
+                : `Cliente #${userId}`;
+            
+            const warehouseName = warehouse.name || warehouse.description || `Bodega #${data.warehouseId}`;
+
+            console.log(`[ServiceRequestService] 📬 Notificando nueva solicitud a jefes de bodega...`);
+            await notificationService.notifyNewServiceRequest(
+                clientName,
+                warehouseName,
+                data.type,
+                data.product || null,
+                data.quantity || null
+            );
+        } catch (err) {
+            console.error(`[ServiceRequestService] Error notificando nueva solicitud:`, err);
+            // No bloquear la respuesta si falla la notificación
+        }
+
+        return newRequest;
     }
 
     /**
@@ -207,6 +232,17 @@ export class ServiceRequestService {
         }
 
         return updated;
+    }
+
+    /**
+     * Obtener una solicitud específica por ID.
+     */
+    async getRequestById(requestId: number) {
+        const request = await serviceRequestRepo.findById(requestId);
+        if (!request) {
+            throw new Error('Solicitud no encontrada');
+        }
+        return request;
     }
 
     /**

@@ -11,13 +11,14 @@ import { Model, Optional } from "sequelize";
 //-------------------------------- ENUMS ------------------------------
 
 /**
- * Este enum se usa para garantizar que solo existan estos 4 valores (roles) en la BD
+ * Este enum se usa para garantizar que solo existan estos 5 valores (roles) en la BD
  */
 
 export enum UserRole {
     ADMIN = 'admin',
     JEFE_BODEGA = 'jefe de bodega',
     AUXILIAR = 'auxiliar',
+    OPERADOR = 'operador',
     CLIENTE = 'cliente',
 }
 

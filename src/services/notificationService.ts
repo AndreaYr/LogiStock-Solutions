@@ -130,6 +130,60 @@ class NotificationService {
 
         return this.create(userId, 'inventory_movement', title, msg);
     }
+
+    /**
+     * Notificar a todos los jefes de bodega sobre una nueva solicitud de servicio.
+     * Se llama cuando un cliente crea una nueva solicitud (Ingreso, Retiro, Cancelación).
+     */
+    async notifyNewServiceRequest(
+        clientName: string,
+        warehouseName: string,
+        requestType: 'INBOUND' | 'OUTBOUND' | 'CANCELLATION',
+        product: string | null,
+        quantity: number | null
+    ) {
+        // Obtener todos los usuarios con rol jefe_bodega o admin
+        const { User, Role } = require('../models/index.js');
+        
+        try {
+            const staffUsers = await User.findAll({
+                include: [{
+                    association: 'role',
+                    where: {}
+                }]
+            });
+
+            // Filtrar por jefe_bodega o admin
+            const typeLabel = requestType === 'INBOUND' ? 'Ingreso'
+                : requestType === 'OUTBOUND' ? 'Retiro'
+                : 'Cancelación';
+            
+            const productInfo = product ? ` de "${product}" (${quantity} unidades)` : '';
+            const title = `📥 Nueva solicitud de ${typeLabel}`;
+            const message = `${clientName} ha solicitado un ${typeLabel.toLowerCase()}${productInfo} en ${warehouseName}.`;
+
+            for (const staff of staffUsers) {
+                const staffRole = (staff as any).role?.name?.toLowerCase() ?? '';
+                const isManager = staffRole.includes('jefe') || staffRole.includes('admin');
+
+                if (isManager) {
+                    console.log(`[NotificationService] 📬 Notificando nuevo service request a ${staffRole} (userId=${staff.id})`);
+                    try {
+                        await this.create(
+                            staff.id,
+                            'system',
+                            title,
+                            message
+                        );
+                    } catch (err) {
+                        console.error(`[NotificationService] Error notificando a ${staffRole} (userId=${staff.id}):`, err);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error(`[NotificationService] Error obteniendo jefes de bodega:`, err);
+        }
+    }
 }
 
 export default new NotificationService();

@@ -11,8 +11,8 @@ const router = Router();
  */
 router.use(authenticate);
 
-/** POST /api/movements → Registrar entrada/salida (Solo Staff: Admin, Warehouse Manager, Assistant) */
-router.post('/', authorize(UserRole.ADMIN, UserRole.JEFE_BODEGA, UserRole.AUXILIAR), MovementController.create);
+/** POST /api/movements → Registrar entrada/salida (Staff: Admin, Warehouse Manager, Assistant, Operator) */
+router.post('/', authorize(UserRole.ADMIN, UserRole.JEFE_BODEGA, UserRole.AUXILIAR, UserRole.OPERADOR), MovementController.create);
 
 /** GET /api/movements → Listar historial (permite query params como warehouseId) */
 router.get('/', MovementController.list);
