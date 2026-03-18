@@ -33,12 +33,14 @@ class RentalContractRepository extends BaseRepository<RentalContract> {
     async saveClientSignature(
         id: number,
         clientSignaturePath: string,
-        documentPhotoPath: string
+        documentPhotoPath: string,
+        documentPhotoBackPath: string
     ): Promise<void> {
         await this.model.update(
             {
                 clientSignaturePath,
                 documentPhotoPath,
+                documentPhotoBackPath,
                 status: 'PENDING_ADMIN',
                 clientSignedAt: new Date(),
             } as any,
@@ -49,12 +51,14 @@ class RentalContractRepository extends BaseRepository<RentalContract> {
     async saveAdminSignature(
         id: number,
         adminSignaturePath: string,
-        contractHash: string
+        contractHash: string,
+        contractPdfPath: string
     ): Promise<void> {
         await this.model.update(
             {
                 adminSignaturePath,
                 contractHash,
+                contractPdfPath,
                 status: 'SIGNED',
                 adminSignedAt: new Date(),
             } as any,

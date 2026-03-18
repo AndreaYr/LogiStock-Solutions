@@ -13,6 +13,7 @@ export interface IRentalContractAttributes {
     warehouseId: number;
     contractPdfPath: string;
     documentPhotoPath: string | null;
+    documentPhotoBackPath: string | null;
     clientSignaturePath: string | null;
     adminSignaturePath: string | null;
     contractHash: string | null;
@@ -28,6 +29,7 @@ export interface IRentalContractCreationAttributes
         IRentalContractAttributes,
         | 'id'
         | 'documentPhotoPath'
+        | 'documentPhotoBackPath'
         | 'clientSignaturePath'
         | 'adminSignaturePath'
         | 'contractHash'

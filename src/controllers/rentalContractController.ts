@@ -90,19 +90,22 @@ export const RentalContractController = {
             }
 
             const userId = req.user!.userId;
-            const { signatureBase64, documentPhotoBase64 } = req.body;
+            const { signatureBase64, documentPhotoBase64, documentPhotoBackBase64 } = req.body;
 
-            if (!signatureBase64 || !documentPhotoBase64) {
-                res.status(400).json({ message: 'signatureBase64 y documentPhotoBase64 son requeridos.' });
+            if (!signatureBase64 || !documentPhotoBase64 || !documentPhotoBackBase64) {
+                res.status(400).json({ message: 'signatureBase64, documentPhotoBase64 y documentPhotoBackBase64 son requeridos.' });
                 return;
             }
 
-            await rentalContractService.clientSign(id, userId, signatureBase64, documentPhotoBase64);
+            await rentalContractService.clientSign(id, userId, signatureBase64, documentPhotoBase64, documentPhotoBackBase64);
             res.status(200).json({ message: 'Contrato firmado por el cliente. El administrador será notificado.' });
         } catch (err: any) {
             const status = err.message.includes('no encontrado') ? 404
                 : err.message.includes('permiso') ? 403
                 : err.message.includes('PENDING_CLIENT') ? 400
+                : err.message.includes('formato inválido') ? 400
+                : err.message.includes('demasiado pequeña') ? 400
+                : err.message.includes('requerida') ? 400
                 : 500;
             res.status(status).json({ message: err.message });
         }

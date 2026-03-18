@@ -17,6 +17,7 @@ class RentalContract
     declare warehouseId: number;
     declare contractPdfPath: string;
     declare documentPhotoPath: string | null;
+    declare documentPhotoBackPath: string | null;
     declare clientSignaturePath: string | null;
     declare adminSignaturePath: string | null;
     declare contractHash: string | null;
@@ -67,7 +68,13 @@ RentalContract.init(
             type: DataTypes.STRING(500),
             allowNull: true,
             defaultValue: null,
-            comment: 'Ruta de la foto de la cédula del cliente',
+            comment: 'URL de la foto frontal de la cédula del cliente',
+        },
+        documentPhotoBackPath: {
+            type: DataTypes.STRING(500),
+            allowNull: true,
+            defaultValue: null,
+            comment: 'URL de la foto del reverso de la cédula del cliente',
         },
         clientSignaturePath: {
             type: DataTypes.STRING(500),

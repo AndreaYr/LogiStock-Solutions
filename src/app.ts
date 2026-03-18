@@ -1,10 +1,14 @@
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { env } from './config/env.js';
 import sequelize from './config/database.js';
 import './models/index.js';
 import apiRoutes from './routes/index.js';
 
 import { securityHeaders, corsConfig, rateLimiter } from './middlewares/securityMiddleware.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Crear la app de express
 const app = express();
@@ -19,8 +23,11 @@ app.use(securityHeaders);
 app.use(corsConfig);
 app.use('/api', rateLimiter); // Limitar peticiones a las rutas de la API
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Archivos estáticos — firmas, fotos cédula, contratos PDF
+app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')));
 
 // Rutas API
 app.use('/api', apiRoutes);

@@ -7,7 +7,8 @@ import rentalContractRepo from '../repositories/rentalContractRepositories.js';
 import rentalApplicationRepo from '../repositories/rentalApplicationRepositories.js';
 import { UserRepository } from '../repositories/userRepositories.js';
 import { WarehouseRepository } from '../repositories/warehouseRepositories.js';
-import { generateContractPdf } from './pdfService.js';
+import { env } from '../config/env.js';
+import { generateContractPdf, generateSignedContractPdf } from './pdfService.js';
 import notificationService from './notificationService.js';
 import RentalContract from '../models/rentalContractModel.js';
 
@@ -80,14 +81,15 @@ class RentalContractService {
     }
 
     /**
-     * El cliente sube foto de cédula y firma (base64).
-     * Guarda los archivos y pasa el contrato a PENDING_ADMIN.
+     * El cliente sube foto frente + reverso de cédula y firma (base64).
+     * Valida las imágenes, guarda los archivos y pasa el contrato a PENDING_ADMIN.
      */
     async clientSign(
         contractId: number,
         userId: number,
         signatureBase64: string,
-        documentPhotoBase64: string
+        documentPhotoBase64: string,
+        documentPhotoBackBase64: string
     ): Promise<void> {
         const contract = await rentalContractRepo.findById(contractId);
         if (!contract) throw new Error('Contrato no encontrado.');
@@ -96,18 +98,30 @@ class RentalContractService {
             throw new Error('El contrato no está en estado PENDING_CLIENT.');
         }
 
+        this._validateImageBase64(signatureBase64, 'Firma', false);
+        this._validateImageBase64(documentPhotoBase64, 'Foto frontal de cédula', true);
+        this._validateImageBase64(documentPhotoBackBase64, 'Foto reverso de cédula', true);
+
         const signaturePath = await this._saveBase64Image(
             signatureBase64,
             `signature_client_${contractId}_${Date.now()}.png`
         );
         const documentPhotoPath = await this._saveBase64Image(
             documentPhotoBase64,
-            `cedula_${contractId}_${Date.now()}.png`
+            `cedula_front_${contractId}_${Date.now()}.jpg`
+        );
+        const documentPhotoBackPath = await this._saveBase64Image(
+            documentPhotoBackBase64,
+            `cedula_back_${contractId}_${Date.now()}.jpg`
         );
 
-        await rentalContractRepo.saveClientSignature(contractId, signaturePath, documentPhotoPath);
+        await rentalContractRepo.saveClientSignature(
+            contractId,
+            signaturePath,
+            documentPhotoPath,
+            documentPhotoBackPath
+        );
 
-        // Notificar al admin
         notificationService.notifyAllAdmins(
             'application_submitted',
             'Contrato pendiente de tu firma',
@@ -117,7 +131,7 @@ class RentalContractService {
 
     /**
      * El admin firma el contrato.
-     * Genera hash SHA-256 y sella el contrato como SIGNED.
+     * Regenera el PDF con todas las firmas embebidas, calcula hash SHA-256 del PDF final.
      */
     async adminSign(contractId: number, signatureBase64: string): Promise<void> {
         const contract = await rentalContractRepo.findById(contractId);
@@ -125,18 +139,62 @@ class RentalContractService {
         if (contract.status !== 'PENDING_ADMIN') {
             throw new Error('El contrato no está en estado PENDING_ADMIN.');
         }
+        if (!contract.clientSignaturePath || !contract.documentPhotoPath || !contract.documentPhotoBackPath) {
+            throw new Error('El contrato no tiene las imágenes del cliente completas.');
+        }
 
-        const signaturePath = await this._saveBase64Image(
+        this._validateImageBase64(signatureBase64, 'Firma del administrador');
+
+        const adminSignaturePath = await this._saveBase64Image(
             signatureBase64,
             `signature_admin_${contractId}_${Date.now()}.png`
         );
 
-        // Hash SHA-256 del archivo PDF del contrato
-        const contractHash = await this._hashFile(contract.contractPdfPath);
+        // Cargar datos completos para regenerar el PDF
+        const application = await rentalApplicationRepo.findById(contract.applicationId);
+        if (!application) throw new Error('Solicitud no encontrada.');
+        const user = await userRepo.findById(contract.userId);
+        if (!user) throw new Error('Usuario no encontrado.');
+        const warehouse = await warehouseRepo.findById(contract.warehouseId);
+        if (!warehouse) throw new Error('Bodega no encontrada.');
 
-        await rentalContractRepo.saveAdminSignature(contractId, signaturePath, contractHash);
+        const now = new Date();
 
-        // Notificar al cliente
+        // Regenerar PDF con firmas embebidas
+        const signedPdfPath = await generateSignedContractPdf({
+            applicationId: contract.applicationId,
+            clientName: `${user.firstName} ${user.lastName}`,
+            clientDocument: application.documentNumber,
+            clientDocumentType: application.documentType,
+            clientPhone: application.phone,
+            clientAddress: application.address,
+            clientEmail: user.email,
+            warehouseId: warehouse.id,
+            warehouseName: (warehouse as any).description ?? `Bodega #${warehouse.id}`,
+            warehouseAddress: (warehouse as any).address ?? '',
+            monthlyPrice: (warehouse as any).monthlyPrice ?? 0,
+            businessActivity: application.businessActivity,
+            merchandiseType: application.merchandiseType,
+            hasDangerousGoods: application.hasDangerousGoods,
+            requiresRefrigeration: application.requiresRefrigeration,
+            clientSignaturePath: path.resolve(__dirname, '../../', contract.clientSignaturePath),
+            documentPhotoPath: path.resolve(__dirname, '../../', contract.documentPhotoPath),
+            documentPhotoBackPath: path.resolve(__dirname, '../../', contract.documentPhotoBackPath),
+            adminSignaturePath: path.resolve(__dirname, '../../', adminSignaturePath),
+            clientSignedAt: contract.clientSignedAt ?? now,
+            adminSignedAt: now,
+        });
+
+        // Hash SHA-256 del PDF FINAL (con firmas)
+        const contractHash = await this._hashFile(signedPdfPath);
+
+        await rentalContractRepo.saveAdminSignature(
+            contractId,
+            adminSignaturePath,
+            contractHash,
+            signedPdfPath
+        );
+
         notificationService.create(
             contract.userId,
             'application_approved',
@@ -165,8 +223,23 @@ class RentalContractService {
 
     // ── Privados ───────────────────────────────────────────────────────────────
 
+    private _validateImageBase64(base64: string, fieldName: string, checkMinSize = false): void {
+        if (!base64 || typeof base64 !== 'string') {
+            throw new Error(`${fieldName}: la imagen es requerida.`);
+        }
+        if (!/^data:image\/(jpeg|jpg|png|webp);base64,/.test(base64)) {
+            throw new Error(`${fieldName}: formato inválido. Solo se aceptan JPG, PNG o WEBP.`);
+        }
+        if (checkMinSize) {
+            const data = base64.replace(/^data:image\/\w+;base64,/, '');
+            const buffer = Buffer.from(data, 'base64');
+            if (buffer.length < 15_000) {
+                throw new Error(`${fieldName}: la imagen es demasiado pequeña. Suba una foto clara (mín. 15 KB).`);
+            }
+        }
+    }
+
     private async _saveBase64Image(base64: string, fileName: string): Promise<string> {
-        // Elimina el prefijo data:image/...;base64, si existe
         const data = base64.replace(/^data:image\/\w+;base64,/, '');
         const buffer = Buffer.from(data, 'base64');
         const filePath = path.join(SIGNATURES_DIR, fileName);

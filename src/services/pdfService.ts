@@ -11,6 +11,15 @@ if (!fs.existsSync(CONTRACTS_DIR)) {
     fs.mkdirSync(CONTRACTS_DIR, { recursive: true });
 }
 
+export interface SignedContractData extends ContractData {
+    clientSignaturePath: string;
+    documentPhotoPath: string;
+    documentPhotoBackPath: string;
+    adminSignaturePath: string;
+    clientSignedAt: Date;
+    adminSignedAt: Date;
+}
+
 export interface ContractData {
     applicationId: number;
     // Datos del cliente
@@ -197,6 +206,211 @@ export async function generateContractPdf(data: ContractData): Promise<string> {
         doc.fontSize(8).font('Helvetica').fillColor('gray')
             .text(
                 `Contrato generado electrónicamente por LogiStock Solutions — ${today}`,
+                { align: 'center' }
+            );
+
+        doc.end();
+    });
+
+    return `uploads/contracts/${fileName}`;
+}
+
+/**
+ * Genera el PDF final del contrato con las firmas e imágenes de cédula embebidas.
+ * Se llama cuando el admin firma — reemplaza el PDF borrador.
+ */
+export async function generateSignedContractPdf(data: SignedContractData): Promise<string> {
+    const fileName = `contrato_${data.applicationId}_signed_${Date.now()}.pdf`;
+    const filePath = path.join(CONTRACTS_DIR, fileName);
+
+    const fmtDate = (d: Date) =>
+        d.toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    await new Promise<void>((resolve, reject) => {
+        const doc = new PDFDocument({ margin: 60, size: 'LETTER' });
+        const stream = fs.createWriteStream(filePath);
+        doc.pipe(stream);
+        stream.on('finish', resolve);
+        stream.on('error', reject);
+
+        const today = fmtDate(data.adminSignedAt);
+
+        // ── Encabezado ──────────────────────────────────────────────────────────
+        doc.fontSize(18).font('Helvetica-Bold')
+            .text('LOGISTOCK SOLUTIONS S.A.S.', { align: 'center' });
+        doc.fontSize(11).font('Helvetica')
+            .text('NIT: 901.234.567-8  |  Bogotá D.C., Colombia', { align: 'center' });
+        doc.moveDown(0.5);
+        doc.moveTo(60, doc.y).lineTo(552, doc.y).stroke();
+        doc.moveDown(0.5);
+
+        doc.fontSize(14).font('Helvetica-Bold')
+            .text('CONTRATO DE ARRENDAMIENTO DE BODEGA', { align: 'center' });
+        doc.moveDown(0.3);
+        doc.fontSize(11).font('Helvetica')
+            .text(`Bogotá D.C., ${today}`, { align: 'center' });
+        doc.moveDown(1);
+
+        // ── Partes ───────────────────────────────────────────────────────────────
+        doc.fontSize(12).font('Helvetica-Bold').text('PARTES DEL CONTRATO');
+        doc.moveDown(0.3);
+        doc.fontSize(10).font('Helvetica');
+        doc.text(
+            'ARRENDADOR: LOGISTOCK SOLUTIONS S.A.S., sociedad legalmente constituida bajo ' +
+            'las leyes colombianas, con NIT 901.234.567-8, en adelante "EL ARRENDADOR".'
+        );
+        doc.moveDown(0.5);
+        doc.text(
+            `ARRENDATARIO: ${data.clientName}, identificado con ${data.clientDocumentType} ` +
+            `N.° ${data.clientDocument}, teléfono ${data.clientPhone}, domiciliado en ` +
+            `${data.clientAddress}, correo electrónico ${data.clientEmail}, ` +
+            'en adelante "EL ARRENDATARIO".'
+        );
+        doc.moveDown(1);
+
+        // ── Cláusulas ────────────────────────────────────────────────────────────
+        doc.fontSize(12).font('Helvetica-Bold').text('CLÁUSULA PRIMERA — OBJETO');
+        doc.moveDown(0.3);
+        doc.fontSize(10).font('Helvetica').text(
+            `EL ARRENDADOR entrega en arrendamiento a EL ARRENDATARIO la bodega denominada ` +
+            `"${data.warehouseName}", ubicada en ${data.warehouseAddress || 'instalaciones de LogiStock'}, ` +
+            `identificada internamente como Bodega #${data.warehouseId}, ` +
+            `para ser utilizada exclusivamente en actividades de: ${data.businessActivity}.`
+        );
+        doc.moveDown(1);
+
+        doc.fontSize(12).font('Helvetica-Bold').text('CLÁUSULA SEGUNDA — PRECIO Y FORMA DE PAGO');
+        doc.moveDown(0.3);
+        doc.fontSize(10).font('Helvetica').text(
+            `El canon mensual de arrendamiento es de COP ${data.monthlyPrice.toLocaleString('es-CO')} ` +
+            `(${numToWords(data.monthlyPrice)} pesos colombianos), pagaderos dentro de los primeros ` +
+            `cinco (5) días calendario de cada mes a través de la plataforma LogiStock.`
+        );
+        doc.moveDown(1);
+
+        doc.fontSize(12).font('Helvetica-Bold').text('CLÁUSULA TERCERA — DURACIÓN');
+        doc.moveDown(0.3);
+        doc.fontSize(10).font('Helvetica').text(
+            'El presente contrato tendrá una duración inicial de doce (12) meses contados desde ' +
+            'la fecha de firma por ambas partes, prorrogable automáticamente por períodos iguales, ' +
+            'salvo comunicación en contrario con treinta (30) días de anticipación.'
+        );
+        doc.moveDown(1);
+
+        doc.fontSize(12).font('Helvetica-Bold').text('CLÁUSULA CUARTA — USO Y MERCANCÍA');
+        doc.moveDown(0.3);
+        doc.fontSize(10).font('Helvetica').text(
+            `EL ARRENDATARIO almacenará únicamente mercancía del tipo: ${data.merchandiseType}. ` +
+            `Manejo de materiales peligrosos: ${data.hasDangerousGoods ? 'SÍ (requiere autorización especial)' : 'NO'}. ` +
+            `Requiere refrigeración: ${data.requiresRefrigeration ? 'SÍ' : 'NO'}. ` +
+            'Queda expresamente prohibido almacenar sustancias ilegales, explosivos o cualquier ' +
+            'material no declarado en la solicitud de estudio.'
+        );
+        doc.moveDown(1);
+
+        doc.fontSize(12).font('Helvetica-Bold').text('CLÁUSULA QUINTA — OBLIGACIONES DE LAS PARTES');
+        doc.moveDown(0.3);
+        doc.fontSize(10).font('Helvetica');
+        doc.text('El Arrendatario se obliga a:');
+        doc.list([
+            'Pagar puntualmente el canon de arrendamiento.',
+            'Mantener la bodega en buen estado y reportar daños inmediatamente.',
+            'No subarrendar ni ceder el contrato sin autorización escrita.',
+            'Cumplir con las normas de seguridad y convivencia del complejo.',
+            'Permitir inspecciones por parte de LogiStock con previo aviso.',
+        ], { bulletRadius: 2, textIndent: 10 });
+        doc.moveDown(0.5);
+        doc.text('El Arrendador se obliga a:');
+        doc.list([
+            'Garantizar el acceso continuo a la bodega.',
+            'Mantener las áreas comunes y servicios públicos.',
+            'Notificar con anticipación cualquier cambio en las condiciones del servicio.',
+        ], { bulletRadius: 2, textIndent: 10 });
+        doc.moveDown(1);
+
+        doc.fontSize(12).font('Helvetica-Bold').text('CLÁUSULA SEXTA — TERMINACIÓN ANTICIPADA');
+        doc.moveDown(0.3);
+        doc.fontSize(10).font('Helvetica').text(
+            'El incumplimiento de cualquiera de las obligaciones establecidas en este contrato ' +
+            'dará derecho a la parte cumplida de solicitar la terminación anticipada, sin perjuicio ' +
+            'de las acciones legales y penales a que haya lugar.'
+        );
+        doc.moveDown(1);
+
+        doc.fontSize(12).font('Helvetica-Bold').text('CLÁUSULA SÉPTIMA — LEGISLACIÓN APLICABLE');
+        doc.moveDown(0.3);
+        doc.fontSize(10).font('Helvetica').text(
+            'El presente contrato se rige por las leyes de la República de Colombia, ' +
+            'especialmente el Código Civil y el Código de Comercio. Para cualquier controversia, ' +
+            'las partes se someten a los jueces competentes de Bogotá D.C.'
+        );
+        doc.moveDown(1.5);
+
+        // ── Firmas con imágenes embebidas ─────────────────────────────────────────
+        doc.fontSize(12).font('Helvetica-Bold').text('FIRMAS');
+        doc.moveDown(0.8);
+
+        const sigY = doc.y;
+        const sigW = 150;
+        const sigH = 60;
+
+        // Firma cliente (izquierda)
+        doc.fontSize(9).font('Helvetica').fillColor('gray')
+            .text('Firma del Arrendatario:', 60, sigY);
+        try {
+            doc.image(data.clientSignaturePath, 60, sigY + 14, { width: sigW, height: sigH, fit: [sigW, sigH] });
+        } catch { /* si la imagen no se puede cargar, dejamos espacio */ }
+        doc.fillColor('black').fontSize(9).font('Helvetica')
+            .text(data.clientName, 60, sigY + 80)
+            .text(`${data.clientDocumentType} ${data.clientDocument}`, 60, sigY + 92)
+            .text(`Firmado: ${fmtDate(data.clientSignedAt)}`, 60, sigY + 104);
+
+        // Firma admin (derecha)
+        doc.fontSize(9).font('Helvetica').fillColor('gray')
+            .text('Firma del Arrendador:', 330, sigY);
+        try {
+            doc.image(data.adminSignaturePath, 330, sigY + 14, { width: sigW, height: sigH, fit: [sigW, sigH] });
+        } catch { /* espacio vacío */ }
+        doc.fillColor('black').fontSize(9).font('Helvetica')
+            .text('LOGISTOCK SOLUTIONS S.A.S.', 330, sigY + 80)
+            .text('Representante Legal', 330, sigY + 92)
+            .text(`Firmado: ${fmtDate(data.adminSignedAt)}`, 330, sigY + 104);
+
+        doc.moveDown(8);
+
+        // ── Documentos de identidad ───────────────────────────────────────────────
+        doc.addPage();
+        doc.fontSize(12).font('Helvetica-Bold').text('DOCUMENTOS DE IDENTIDAD DEL ARRENDATARIO');
+        doc.moveDown(0.5);
+        doc.fontSize(9).font('Helvetica').fillColor('gray')
+            .text('Las siguientes imágenes fueron adjuntadas por el arrendatario al momento de la firma digital.');
+        doc.fillColor('black');
+        doc.moveDown(1);
+
+        const photoW = 210;
+        const photoH = 130;
+        const photoY = doc.y;
+
+        // Frente
+        doc.fontSize(10).font('Helvetica-Bold').text('Frente de la cédula:', 60, photoY);
+        try {
+            doc.image(data.documentPhotoPath, 60, photoY + 16, { width: photoW, height: photoH, fit: [photoW, photoH] });
+        } catch { doc.rect(60, photoY + 16, photoW, photoH).stroke(); }
+
+        // Reverso
+        doc.fontSize(10).font('Helvetica-Bold').text('Reverso de la cédula:', 300, photoY);
+        try {
+            doc.image(data.documentPhotoBackPath, 300, photoY + 16, { width: photoW, height: photoH, fit: [photoW, photoH] });
+        } catch { doc.rect(300, photoY + 16, photoW, photoH).stroke(); }
+
+        doc.moveDown(11);
+
+        // ── Pie de página ─────────────────────────────────────────────────────────
+        doc.moveTo(60, doc.y).lineTo(552, doc.y).stroke();
+        doc.moveDown(0.3);
+        doc.fontSize(8).font('Helvetica').fillColor('gray')
+            .text(
+                `Contrato sellado electrónicamente por LogiStock Solutions — ${today}`,
                 { align: 'center' }
             );
 
