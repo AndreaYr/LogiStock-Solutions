@@ -45,7 +45,8 @@ export const AuthController = {
             const userAgent = req.headers['user-agent'];
 
             const result = await authService.login({ email, password, ipAddress, userAgent });
-            res.status(200).json({ message: 'Código de verificación enviado a tu correo.', ...result });
+            const message = result.otpRequired ? 'Código de verificación enviado a tu correo.' : 'Sesión iniciada correctamente (Modo Local).';
+            res.status(200).json({ message, ...result });
         } catch (err: any) {
             console.error('[AuthController] ❌ ERROR EN LOGIN:', err);
             const status = err.message?.includes('Credenciales') || err.message?.includes('bloqueada') ? 401 : 500;

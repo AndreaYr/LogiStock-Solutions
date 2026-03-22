@@ -19,6 +19,9 @@ function toFrontendFormat(w: any) {
     // Determinar el área final: usar usableArea si existe, sino el cálculo
     const finalArea = usable > 0 ? usable : totalArea;
 
+    // DEBUG: Verificar imageUrl
+    console.log(`[toFrontendFormat] ${w.name}: imageUrl type=${typeof w.imageUrl}, isArray=${Array.isArray(w.imageUrl)}, value=`, w.imageUrl);
+
     return {
         id: w.id,
         // ── Identificación ──────────────────────────────────
