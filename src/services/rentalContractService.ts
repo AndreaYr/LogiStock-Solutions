@@ -60,6 +60,7 @@ class RentalContractService {
             merchandiseType: application.merchandiseType,
             hasDangerousGoods: application.hasDangerousGoods,
             requiresRefrigeration: application.requiresRefrigeration,
+            rentalDuration: (application as any).rentalDuration ?? 'MONTHLY',
         });
 
         const contract = await rentalContractRepo.create({
@@ -177,6 +178,7 @@ class RentalContractService {
             merchandiseType: application.merchandiseType,
             hasDangerousGoods: application.hasDangerousGoods,
             requiresRefrigeration: application.requiresRefrigeration,
+            rentalDuration: (application as any).rentalDuration ?? 'MONTHLY',
             clientSignaturePath: path.resolve(__dirname, '../../', contract.clientSignaturePath),
             documentPhotoPath: path.resolve(__dirname, '../../', contract.documentPhotoPath),
             documentPhotoBackPath: path.resolve(__dirname, '../../', contract.documentPhotoBackPath),
@@ -204,7 +206,7 @@ class RentalContractService {
     }
 
     async getByUser(userId: number): Promise<RentalContract[]> {
-        return rentalContractRepo.findByUserId(userId);
+        return rentalContractRepo.findByUserIdWithWarehouse(userId);
     }
 
     async getAll(): Promise<RentalContract[]> {

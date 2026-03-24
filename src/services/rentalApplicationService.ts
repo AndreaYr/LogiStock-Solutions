@@ -27,6 +27,7 @@ export interface SubmitApplicationDto {
     hasDangerousGoods: boolean;
     requiresRefrigeration: boolean;
     acceptsTerms: boolean;
+    rentalDuration: 'MONTHLY' | 'SEMESTER' | 'ANNUAL';
 }
 
 class RentalApplicationService {

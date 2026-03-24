@@ -7,6 +7,7 @@ import {
     DocumentType,
     ApplicationStatus,
     OfacStatus,
+    RentalDuration,
 } from '../interfaces/rentalApplicationInterfaces.js';
 
 class RentalApplication
@@ -27,6 +28,7 @@ class RentalApplication
     declare hasDangerousGoods: boolean;
     declare requiresRefrigeration: boolean;
     declare acceptsTerms: boolean;
+    declare rentalDuration: RentalDuration;
     declare status: ApplicationStatus;
     declare rejectionReason: string | null;
     declare ofacStatus: OfacStatus;
@@ -113,6 +115,12 @@ RentalApplication.init(
             type: DataTypes.BOOLEAN,
             allowNull: false,
             comment: 'Acepta los términos y condiciones del arriendo',
+        },
+        rentalDuration: {
+            type: DataTypes.ENUM('MONTHLY', 'SEMESTER', 'ANNUAL'),
+            allowNull: false,
+            defaultValue: 'MONTHLY',
+            comment: 'Duración del contrato elegida por el cliente: mensual, semestral o anual',
         },
         status: {
             type: DataTypes.ENUM('PENDING', 'UNDER_REVIEW', 'APPROVED', 'REJECTED'),

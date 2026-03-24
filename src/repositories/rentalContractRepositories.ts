@@ -1,6 +1,7 @@
 import { BaseRepository } from './baseRepositories.js';
 import RentalContract from '../models/rentalContractModel.js';
 import { ContractStatus } from '../interfaces/rentalContractInterfaces.js';
+import Warehouse from '../models/warehouseModel.js';
 
 class RentalContractRepository extends BaseRepository<RentalContract> {
     constructor() {
@@ -13,6 +14,14 @@ class RentalContractRepository extends BaseRepository<RentalContract> {
 
     async findByUserId(userId: number): Promise<RentalContract[]> {
         return this.model.findAll({ where: { userId }, order: [['createdAt', 'DESC']] });
+    }
+
+    async findByUserIdWithWarehouse(userId: number): Promise<RentalContract[]> {
+        return this.model.findAll({
+            where: { userId },
+            order: [['createdAt', 'DESC']],
+            include: [{ model: Warehouse, as: 'warehouse', attributes: ['id', 'monthlyPrice'] }],
+        });
     }
 
     async findPendingAdmin(): Promise<RentalContract[]> {
