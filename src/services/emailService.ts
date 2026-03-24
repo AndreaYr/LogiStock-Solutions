@@ -38,34 +38,60 @@ function baseLayout(title: string, body: string): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${title}</title>
+  <title>\${title}</title>
 </head>
-<body style="margin:0;padding:0;background:#f4f6f8;font-family:Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f8;padding:40px 0;">
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:60px 0;">
     <tr>
       <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-          <!-- Header -->
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,0.05);border:1px solid #e2e8f0;">
+          <!-- Elegant Header -->
           <tr>
-            <td style="background:#1a56db;padding:24px 32px;">
-              <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">📦 LogiStock Solutions</h1>
+            <td style="background-color:#0f172a;padding:40px 40px;text-align:center;border-bottom:4px solid #3b82f6;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <div style="display:inline-block;padding:12px 24px;background:rgba(255,255,255,0.05);border-radius:8px;border:1px solid rgba(255,255,255,0.1);">
+                      <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:800;letter-spacing:1px;text-transform:uppercase;">
+                        <span style="color:#3b82f6;">📦 LOGIS</span>TOCK
+                      </h1>
+                    </div>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
-          <!-- Body -->
+          <!-- Body Content -->
           <tr>
-            <td style="padding:32px;">
-              ${body}
+            <td style="padding:48px 40px;color:#334155;">
+              \${body}
             </td>
           </tr>
-          <!-- Footer -->
+          <!-- Sophisticated Footer -->
           <tr>
-            <td style="background:#f4f6f8;padding:20px 32px;text-align:center;">
-              <p style="margin:0;color:#6b7280;font-size:12px;">
-                © ${new Date().getFullYear()} LogiStock Solutions. Todos los derechos reservados.
-              </p>
-              <p style="margin:4px 0 0;color:#6b7280;font-size:12px;">
-                Este correo fue enviado automáticamente, por favor no respondas a este mensaje.
-              </p>
+            <td style="background-color:#f8fafc;padding:32px 40px;text-align:center;border-top:1px solid #e2e8f0;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" style="padding-bottom:16px;">
+                    <a href="#" style="color:#64748b;text-decoration:none;margin:0 10px;font-size:14px;font-weight:600;">Soporte</a>
+                    <span style="color:#cbd5e1;">|</span>
+                    <a href="#" style="color:#64748b;text-decoration:none;margin:0 10px;font-size:14px;font-weight:600;">Términos</a>
+                    <span style="color:#cbd5e1;">|</span>
+                    <a href="#" style="color:#64748b;text-decoration:none;margin:0 10px;font-size:14px;font-weight:600;">Privacidad</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <p style="margin:0;color:#94a3b8;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">
+                      © \${new Date().getFullYear()} LogiStock Solutions.
+                    </p>
+                    <p style="margin:8px 0 0;color:#94a3b8;font-size:12px;">
+                      Este es un correo automático. Por favor, no respondas.<br>
+                      Enviado con seguridad desde servidores LogiStock.
+                    </p>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
         </table>
@@ -78,15 +104,17 @@ function baseLayout(title: string, body: string): string {
 
 function primaryButton(url: string, text: string): string {
   return `
-    <div style="text-align:center;margin:28px 0;">
-      <a href="${url}" style="background:#1a56db;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:6px;font-size:15px;font-weight:600;display:inline-block;">
+    <div style="text-align:center;margin:36px 0;">
+      <a href="${url}" style="background-color:#0f172a;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:8px;font-size:16px;font-weight:bold;display:inline-block;border:1px solid #1e293b;box-shadow:0 4px 6px rgba(0,0,0,0.1);text-transform:uppercase;letter-spacing:0.5px;">
         ${text}
       </a>
     </div>
-    <p style="color:#6b7280;font-size:12px;text-align:center;">
-      Si el botón no funciona, copia y pega este enlace en tu navegador:<br/>
-      <a href="${url}" style="color:#1a56db;word-break:break-all;">${url}</a>
-    </p>`;
+    <div style="text-align:center;margin-top:24px;padding-top:24px;border-top:1px dashed #e2e8f0;">
+      <p style="color:#64748b;font-size:13px;margin:0;">
+        ¿El botón no funciona? Copia este enlace en tu navegador:<br/>
+        <a href="${url}" style="color:#3b82f6;word-break:break-all;text-decoration:none;font-weight:500;display:inline-block;margin-top:8px;">${url}</a>
+      </p>
+    </div>`;
 }
 
 // ──────────────────────────── Métodos públicos ────────────────────────────
@@ -259,27 +287,27 @@ export async function sendOtpEmail(
   otpCode: string
 ): Promise<void> {
   const body = `
-      <h2 style="color:#111827;margin-top:0;">Código de verificación</h2>
-      <p style="color:#374151;line-height:1.6;">
-        Hola <strong>${firstName}</strong>, usa el siguiente código para completar
-        tu inicio de sesión en <strong>LogiStock Solutions</strong>.
+      <h2 style="color:#0f172a;margin-top:0;font-size:24px;font-weight:700;">Código de verificación</h2>
+      <p style="color:#475569;line-height:1.7;font-size:16px;">
+        Estimado/a <strong>${firstName}</strong>,<br><br>
+        Usa el siguiente código de seguridad para completar tu inicio de sesión en <strong>LogiStock Solutions</strong>.
       </p>
-      <div style="text-align:center;margin:32px 0;">
-        <div style="display:inline-block;background:#f4f6f8;border:2px dashed #1a56db;border-radius:12px;padding:20px 40px;">
-          <span style="font-size:36px;font-weight:800;letter-spacing:10px;color:#1a56db;">${otpCode}</span>
+      <div style="text-align:center;margin:40px 0;">
+        <div style="display:inline-block;background-color:#f8fafc;border:2px solid #e2e8f0;border-radius:12px;padding:24px 48px;box-shadow:inset 0 2px 4px rgba(0,0,0,0.02);">
+          <span style="font-size:42px;font-weight:800;letter-spacing:14px;color:#0f172a;">${otpCode}</span>
         </div>
       </div>
-      <p style="color:#6b7280;font-size:13px;text-align:center;">
-        Este código expira en <strong>10 minutos</strong>.
+      <p style="color:#64748b;font-size:14px;text-align:center;margin-bottom:8px;">
+        ⏳ Este código es válido exclusivamente por <strong>10 minutos</strong>.
       </p>
-      <p style="color:#dc2626;font-size:13px;text-align:center;">
-        ⚠️ Si no intentaste iniciar sesión, ignora este mensaje y considera cambiar tu contraseña.
+      <p style="color:#ef4444;font-size:13px;text-align:center;margin-top:0;">
+        ⚠️ Si no intentaste iniciar sesión, ignora este mensaje o contacta a soporte.
       </p>`;
 
   await transporter.sendMail({
     from: env.EMAIL_FROM,
     to,
-    subject: 'Tu código de verificación — LogiStock Solutions',
+    subject: `🔐 Tu código es ${otpCode} — LogiStock`,
     html: baseLayout('Código de verificación', body),
   });
 }

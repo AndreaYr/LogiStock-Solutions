@@ -36,6 +36,9 @@ export const env = {
     WOMPI_TEST_INTEGRITY_SECRET:  process.env.WOMPI_TEST_INTEGRITY_SECRET || 'test_integrity_7rpwUDeBhSd4ecYePRnNHXUY0YtLgEDa',
     WOMPI_TEST_EVENTS_SECRET:     process.env.WOMPI_TEST_EVENTS_SECRET || 'test_events_egodi8LzBEm4OorHa8d2YUegz6raZBYd',
 
+    // MODO SIMULACIÓN ACADÉMICO — Fuerza sandbox incluso en producción
+    WOMPI_USE_TEST: process.env.WOMPI_USE_TEST || 'false',
+
     // EMAIL (SMTP - Nodemailer)
     SMTP_HOST: process.env.SMTP_HOST || 'smtp.gmail.com',
     SMTP_PORT: parseInt(process.env.SMTP_PORT || '465', 10),

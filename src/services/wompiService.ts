@@ -18,8 +18,24 @@ const WOMPI_SANDBOX_BASE = 'https://sandbox.wompi.co/v1';
 
 class WompiService {
 
-    /** true cuando el proceso corre en el servidor de Amplify */
+    /** 
+     * true cuando se usa ambiente de producción de Wompi.
+     * 
+     * IMPORTANTE: Para proyectos académicos/demo que simularán pagos sin transacciones reales,
+     * set WOMPI_USE_TEST=true en el .env para forzar uso de credenciales de test/sandbox
+     * incluso en producción (NODE_ENV=production).
+     * 
+     * Lógica:
+     * - Si WOMPI_USE_TEST=true → Usa credenciales TEST (sandbox.wompi.co)
+     * - Si WOMPI_USE_TEST=false/undefined Y NODE_ENV=production → Usa credenciales PROD
+     * - Si NODE_ENV != production → Usa credenciales TEST
+     */
     private get isProduction(): boolean {
+        // Fuerza TEST si WOMPI_USE_TEST está explícitamente activado
+        if (env.WOMPI_USE_TEST === 'true') {
+            return false;
+        }
+        // De lo contrario, decide por NODE_ENV
         return env.NODE_ENV === 'production';
     }
 

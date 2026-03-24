@@ -5,7 +5,7 @@
   "description": "LogiStock Solutions - Warehouse Management System API",
   "main": "dist/app.js",
   "scripts": {
-    "dev": "tsx watch src/app.ts",
+    "dev": "tsx src/scripts/start-dev.ts",
     "build": "tsc",
     "start": "node dist/app.js",
     "db:sync": "tsx src/scripts/force-db-sync.ts",

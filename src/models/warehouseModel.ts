@@ -60,6 +60,7 @@ export interface IWarehouseAttributes {
     /** Indica si la bodega está disponible para arrendar */
     isAvailable: boolean;
     imageUrl: string | null;
+    imageUrls?: string[] | null;
     monthlyPrice: number;
 }
 
@@ -114,6 +115,7 @@ class Warehouse extends Model<IWarehouseAttributes, IWarehouseCreationAttributes
     declare accessHours: string | null;
     declare isAvailable: boolean;
     declare imageUrl: string | null;
+    declare imageUrls?: string[] | null;
     declare monthlyPrice: number;
 }
 
@@ -210,8 +212,10 @@ Warehouse.init({
         defaultValue: true,
     },
     imageUrl: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.JSON,
         allowNull: true,
+        defaultValue: null,
+        comment: 'Array de URLs de imágenes para carrusel (3-4 imágenes por bodega)',
     },
     monthlyPrice: {
         type: DataTypes.DECIMAL(10, 2),

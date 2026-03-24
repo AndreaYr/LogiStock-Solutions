@@ -90,7 +90,7 @@ class AuthService {
      * Primera fase del login: valida credenciales y envía OTP al correo.
      * No devuelve tokens — el usuario debe completar el segundo paso con verifyOtp().
      */
-    async login(dto: LoginDto): Promise<{ otpRequired: true }> {
+    async login(dto: LoginDto): Promise<{ otpRequired: boolean, accessToken?: string, refreshToken?: string }> {
         const { email, password, ipAddress, userAgent } = dto;
 
         const user = await userRepo.findByEmail(email);
@@ -123,6 +123,18 @@ class AuthService {
 
         // Bloquear login si el email no ha sido verificado
         if (!user.isVerified) throw new Error('Debes verificar tu email antes de iniciar sesión. Revisa tu bandeja de entrada.');
+
+        // Bypass OTP en desarrollo local para agilizar las pruebas
+        if (env.NODE_ENV === 'development') {
+            await userRepo.update(user.id, { lastLogin: new Date() });
+            await loginAttemptRepo.create({ userId: user.id, email, success: true, ipAddress, userAgent, attemptedAt: new Date() });
+            
+            const role = await roleRepository.findById(user.roleId);
+            const roleName = role?.name ?? UserRole.CLIENTE;
+            const tokens = await this._issueTokens(user.id, user.roleId, roleName);
+            
+            return { otpRequired: false, ...tokens };
+        }
 
         // Generar OTP de 6 dígitos, hashearlo y guardarlo con expiración de 10 minutos
         const rawOtp    = Math.floor(100000 + Math.random() * 900000).toString();
