@@ -40,22 +40,21 @@ function baseLayout(title: string, body: string): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>\${title}</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:60px 0;">
+<body style="margin:0;padding:0;background-color:#f5faf8;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5faf8;padding:60px 0;">
     <tr>
       <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,0.05);border:1px solid #e2e8f0;">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,0.05);border:1px solid #e0f2e9;">
           <!-- Elegant Header -->
           <tr>
-            <td style="background-color:#0f172a;padding:40px 40px;text-align:center;border-bottom:4px solid #3b82f6;">
+            <td style="background-color:#ffffff;padding:40px 40px;text-align:center;border-bottom:4px solid #47C65C;">
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center">
-                    <div style="display:inline-block;padding:12px 24px;background:rgba(255,255,255,0.05);border-radius:8px;border:1px solid rgba(255,255,255,0.1);">
-                      <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:800;letter-spacing:1px;text-transform:uppercase;">
-                        <span style="color:#3b82f6;">📦 LOGIS</span>TOCK
-                      </h1>
-                    </div>
+                    <img src="${env.APP_URL}/logo.svg" alt="LogiStock" style="width:56px;height:56px;margin-bottom:8px;display:block;" />
+                    <h1 style="margin:0;color:#1a1a1a;font-size:24px;font-weight:700;letter-spacing:0.5px;">
+                      <span style="color:#1a1a1a;">Logi</span><span style="color:#47C65C;">Stock</span>
+                    </h1>
                   </td>
                 </tr>
               </table>
@@ -63,29 +62,29 @@ function baseLayout(title: string, body: string): string {
           </tr>
           <!-- Body Content -->
           <tr>
-            <td style="padding:48px 40px;color:#334155;">
+            <td style="padding:48px 40px;color:#333333;">
               \${body}
             </td>
           </tr>
           <!-- Sophisticated Footer -->
           <tr>
-            <td style="background-color:#f8fafc;padding:32px 40px;text-align:center;border-top:1px solid #e2e8f0;">
+            <td style="background-color:#f9fbfa;padding:32px 40px;text-align:center;border-top:1px solid #e0f2e9;">
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding-bottom:16px;">
-                    <a href="#" style="color:#64748b;text-decoration:none;margin:0 10px;font-size:14px;font-weight:600;">Soporte</a>
-                    <span style="color:#cbd5e1;">|</span>
-                    <a href="#" style="color:#64748b;text-decoration:none;margin:0 10px;font-size:14px;font-weight:600;">Términos</a>
-                    <span style="color:#cbd5e1;">|</span>
-                    <a href="#" style="color:#64748b;text-decoration:none;margin:0 10px;font-size:14px;font-weight:600;">Privacidad</a>
+                    <a href="#" style="color:#666666;text-decoration:none;margin:0 10px;font-size:14px;font-weight:600;">Soporte</a>
+                    <span style="color:#aaaaaa;">|</span>
+                    <a href="#" style="color:#666666;text-decoration:none;margin:0 10px;font-size:14px;font-weight:600;">Términos</a>
+                    <span style="color:#aaaaaa;">|</span>
+                    <a href="#" style="color:#666666;text-decoration:none;margin:0 10px;font-size:14px;font-weight:600;">Privacidad</a>
                   </td>
                 </tr>
                 <tr>
                   <td align="center">
-                    <p style="margin:0;color:#94a3b8;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">
+                    <p style="margin:0;color:#999999;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">
                       © \${new Date().getFullYear()} LogiStock Solutions.
                     </p>
-                    <p style="margin:8px 0 0;color:#94a3b8;font-size:12px;">
+                    <p style="margin:8px 0 0;color:#999999;font-size:12px;">
                       Este es un correo automático. Por favor, no respondas.<br>
                       Enviado con seguridad desde servidores LogiStock.
                     </p>
@@ -105,14 +104,14 @@ function baseLayout(title: string, body: string): string {
 function primaryButton(url: string, text: string): string {
   return `
     <div style="text-align:center;margin:36px 0;">
-      <a href="${url}" style="background-color:#0f172a;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:8px;font-size:16px;font-weight:bold;display:inline-block;border:1px solid #1e293b;box-shadow:0 4px 6px rgba(0,0,0,0.1);text-transform:uppercase;letter-spacing:0.5px;">
+      <a href="${url}" style="background-color:#47C65C;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:8px;font-size:16px;font-weight:bold;display:inline-block;border:1px solid #3aa84a;box-shadow:0 4px 6px rgba(71,198,92,0.2);text-transform:uppercase;letter-spacing:0.5px;transition:background-color 0.2s;">
         ${text}
       </a>
     </div>
-    <div style="text-align:center;margin-top:24px;padding-top:24px;border-top:1px dashed #e2e8f0;">
-      <p style="color:#64748b;font-size:13px;margin:0;">
+    <div style="text-align:center;margin-top:24px;padding-top:24px;border-top:1px dashed #e0f2e9;">
+      <p style="color:#666666;font-size:13px;margin:0;">
         ¿El botón no funciona? Copia este enlace en tu navegador:<br/>
-        <a href="${url}" style="color:#3b82f6;word-break:break-all;text-decoration:none;font-weight:500;display:inline-block;margin-top:8px;">${url}</a>
+        <a href="${url}" style="color:#47C65C;word-break:break-all;text-decoration:none;font-weight:500;display:inline-block;margin-top:8px;">${url}</a>
       </p>
     </div>`;
 }
@@ -130,16 +129,16 @@ export async function sendVerificationEmail(
   const url = `${env.BACKEND_URL}/api/auth/verify-email?token=${verificationToken}`;
 
   const body = `
-      <h2 style="color:#111827;margin-top:0;">¡Bienvenido, ${firstName}!</h2>
-      <p style="color:#374151;line-height:1.6;">
+      <h2 style="color:#1a1a1a;margin-top:0;">¡Bienvenido, ${firstName}!</h2>
+      <p style="color:#333333;line-height:1.6;">
         Tu cuenta en <strong>LogiStock Solutions</strong> fue creada exitosamente.
         Para activarla, verifica tu dirección de email haciendo clic en el botón de abajo.
       </p>
-      <p style="color:#374151;line-height:1.6;">
+      <p style="color:#333333;line-height:1.6;">
         Este enlace expira en <strong>24 horas</strong>.
       </p>
       ${primaryButton(url, 'Verificar mi cuenta')}
-      <p style="color:#6b7280;font-size:13px;">
+      <p style="color:#666666;font-size:13px;">
         Si no creaste esta cuenta, puedes ignorar este mensaje.
       </p>`;
 
@@ -159,8 +158,8 @@ export async function sendWelcomeEmail(
   firstName: string
 ): Promise<void> {
   const body = `
-      <h2 style="color:#111827;margin-top:0;">¡Cuenta verificada, ${firstName}! 🎉</h2>
-      <p style="color:#374151;line-height:1.6;">
+      <h2 style="color:#1a1a1a;margin-top:0;font-size:24px;">¡Cuenta verificada, ${firstName}! 🎉</h2>
+      <p style="color:#333333;line-height:1.6;">
         Tu cuenta está activa. Ya puedes iniciar sesión y comenzar a gestionar
         tu inventario con <strong>LogiStock Solutions</strong>.
       </p>
@@ -190,16 +189,16 @@ export async function sendPasswordResetEmail(
   const url = `${env.APP_URL}/reset-password?token=${resetToken}`;
 
   const body = `
-      <h2 style="color:#111827;margin-top:0;">Restablece tu contraseña</h2>
-      <p style="color:#374151;line-height:1.6;">
+      <h2 style="color:#1a1a1a;margin-top:0;">Restablece tu contraseña</h2>
+      <p style="color:#333333;line-height:1.6;">
         Hola <strong>${firstName}</strong>, recibimos una solicitud para restablecer
         la contraseña de tu cuenta. Haz clic en el botón para continuar.
       </p>
-      <p style="color:#374151;line-height:1.6;">
+      <p style="color:#333333;line-height:1.6;">
         Este enlace expira en <strong>1 hora</strong>.
       </p>
       ${primaryButton(url, 'Restablecer contraseña')}
-      <p style="color:#dc2626;font-size:13px;">
+      <p style="color:#d32f2f;font-size:13px;">
         ⚠️ Si no solicitaste este cambio, ignora este mensaje. Tu contraseña actual sigue siendo válida.
       </p>`;
 
@@ -219,12 +218,12 @@ export async function sendPasswordChangedEmail(
   firstName: string
 ): Promise<void> {
   const body = `
-      <h2 style="color:#111827;margin-top:0;">Contraseña actualizada</h2>
-      <p style="color:#374151;line-height:1.6;">
+      <h2 style="color:#1a1a1a;margin-top:0;">Contraseña actualizada</h2>
+      <p style="color:#333333;line-height:1.6;">
         Hola <strong>${firstName}</strong>, tu contraseña fue cambiada exitosamente el
         <strong>${new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' })}</strong>.
       </p>
-      <p style="color:#dc2626;font-size:13px;">
+      <p style="color:#d32f2f;font-size:13px;">
         ⚠️ Si no realizaste este cambio, contacta al soporte inmediatamente.
       </p>
       ${primaryButton(`${env.APP_URL}/login`, 'Ir al inicio de sesión')}`;
@@ -247,25 +246,25 @@ export async function sendLoginAlertEmail(
   userAgent: string | null
 ): Promise<void> {
   const body = `
-      <h2 style="color:#111827;margin-top:0;">Nuevo inicio de sesión detectado</h2>
-      <p style="color:#374151;line-height:1.6;">
+      <h2 style="color:#1a1a1a;margin-top:0;">Nuevo inicio de sesión detectado</h2>
+      <p style="color:#333333;line-height:1.6;">
         Hola <strong>${firstName}</strong>, se detectó un inicio de sesión en tu cuenta.
       </p>
       <table style="width:100%;border-collapse:collapse;margin:16px 0;">
-        <tr style="background:#f9fafb;">
-          <td style="padding:10px 14px;color:#6b7280;font-size:13px;width:140px;">Fecha y hora</td>
-          <td style="padding:10px 14px;color:#111827;font-size:13px;">${new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' })}</td>
+        <tr style="background:#f9fbfa;">
+          <td style="padding:10px 14px;color:#666666;font-size:13px;width:140px;">Fecha y hora</td>
+          <td style="padding:10px 14px;color:#1a1a1a;font-size:13px;">${new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' })}</td>
         </tr>
         <tr>
-          <td style="padding:10px 14px;color:#6b7280;font-size:13px;">Dirección IP</td>
-          <td style="padding:10px 14px;color:#111827;font-size:13px;">${ipAddress}</td>
+          <td style="padding:10px 14px;color:#666666;font-size:13px;">Dirección IP</td>
+          <td style="padding:10px 14px;color:#1a1a1a;font-size:13px;">${ipAddress}</td>
         </tr>
-        <tr style="background:#f9fafb;">
-          <td style="padding:10px 14px;color:#6b7280;font-size:13px;">Dispositivo</td>
-          <td style="padding:10px 14px;color:#111827;font-size:13px;">${userAgent || 'Desconocido'}</td>
+        <tr style="background:#f9fbfa;">
+          <td style="padding:10px 14px;color:#666666;font-size:13px;">Dispositivo</td>
+          <td style="padding:10px 14px;color:#1a1a1a;font-size:13px;">${userAgent || 'Desconocido'}</td>
         </tr>
       </table>
-      <p style="color:#dc2626;font-size:13px;">
+      <p style="color:#d32f2f;font-size:13px;">
         ⚠️ Si no fuiste tú, cambia tu contraseña inmediatamente.
       </p>`;
 
@@ -287,20 +286,20 @@ export async function sendOtpEmail(
   otpCode: string
 ): Promise<void> {
   const body = `
-      <h2 style="color:#0f172a;margin-top:0;font-size:24px;font-weight:700;">Código de verificación</h2>
-      <p style="color:#475569;line-height:1.7;font-size:16px;">
+      <h2 style="color:#1a1a1a;margin-top:0;font-size:24px;font-weight:700;">Código de verificación</h2>
+      <p style="color:#333333;line-height:1.7;font-size:16px;">
         Estimado/a <strong>${firstName}</strong>,<br><br>
         Usa el siguiente código de seguridad para completar tu inicio de sesión en <strong>LogiStock Solutions</strong>.
       </p>
       <div style="text-align:center;margin:40px 0;">
-        <div style="display:inline-block;background-color:#f8fafc;border:2px solid #e2e8f0;border-radius:12px;padding:24px 48px;box-shadow:inset 0 2px 4px rgba(0,0,0,0.02);">
-          <span style="font-size:42px;font-weight:800;letter-spacing:14px;color:#0f172a;">${otpCode}</span>
+        <div style="display:inline-block;background-color:#f0f7f3;border:2px solid #47C65C;border-radius:12px;padding:24px 48px;box-shadow:inset 0 2px 4px rgba(0,0,0,0.02);">
+          <span style="font-size:42px;font-weight:800;letter-spacing:14px;color:#1a1a1a;">${otpCode}</span>
         </div>
       </div>
-      <p style="color:#64748b;font-size:14px;text-align:center;margin-bottom:8px;">
+      <p style="color:#666666;font-size:14px;text-align:center;margin-bottom:8px;">
         ⏳ Este código es válido exclusivamente por <strong>10 minutos</strong>.
       </p>
-      <p style="color:#ef4444;font-size:13px;text-align:center;margin-top:0;">
+      <p style="color:#d32f2f;font-size:13px;text-align:center;margin-top:0;">
         ⚠️ Si no intentaste iniciar sesión, ignora este mensaje o contacta a soporte.
       </p>`;
 
@@ -322,16 +321,16 @@ export async function sendNotificationEmail(
   message: string
 ): Promise<void> {
   const body = `
-      <h2 style="color:#111827;margin-top:0;">${title}</h2>
-      <p style="color:#374151;line-height:1.6;">
+      <h2 style="color:#1a1a1a;margin-top:0;">${title}</h2>
+      <p style="color:#333333;line-height:1.6;">
         Hola <strong>${firstName}</strong>,
       </p>
-      <div style="background:#f9fafb;padding:20px;border-radius:8px;border:1px solid #e5e7eb;margin:20px 0;">
-        <p style="margin:0;color:#111827;font-size:16px;line-height:1.5;">
+      <div style="background:#f9fbfa;padding:20px;border-radius:8px;border:1px solid #e0f2e9;margin:20px 0;">
+        <p style="margin:0;color:#1a1a1a;font-size:16px;line-height:1.5;">
           ${message}
         </p>
       </div>
-      <p style="color:#6b7280;font-size:14px;">
+      <p style="color:#666666;font-size:14px;">
         Puedes ver más detalles ingresando a tu panel de control en LogiStock.
       </p>
       ${primaryButton(`${env.APP_URL}/dashboard`, 'Ir al Dashboard')}`;

@@ -131,7 +131,8 @@ const updateImages = async () => {
       const warehouse = await Warehouse.findOne({ where: { name: warehouseName } });
       
       if (warehouse) {
-        await warehouse.update({ imageUrl: imageUrls });
+        // imageUrl debe ser string (JSON), no array
+        await warehouse.update({ imageUrl: JSON.stringify(imageUrls) });
         console.log(`✅ ${warehouseName} (${imageUrls.length} imágenes)`);
         updated++;
       } else {

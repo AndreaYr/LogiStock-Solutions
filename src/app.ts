@@ -44,8 +44,11 @@ const startServer = async () => {
         await sequelize.authenticate();
         console.log('✅ DB conectada');
 
-
-        await sequelize.sync();
+        // In development, use alter:true to modify column constraints
+        // In production, use migrations instead
+        // NOTE: Disabled due to issues with ENUM column changes
+        // const shouldAlter = env.NODE_ENV === 'development';
+        await sequelize.sync({ alter: false, force: false });
         console.log('✅ Tablas sincronizadas');
 
         app.listen(env.PORT, () => {

@@ -46,5 +46,8 @@ export const env = {
     SMTP_PASS: process.env.SMTP_PASS || '',
     EMAIL_FROM: process.env.EMAIL_FROM || 'LogiStock <tu-correo@gmail.com>',
 
+    // CHATBOT (Gemini API) - Busca en variable de entorno del sistema primero, luego en .env
+    GOOGLE_API_KEY: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '',
+
 }
 

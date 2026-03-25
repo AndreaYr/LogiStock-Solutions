@@ -11,6 +11,10 @@ import Novelty from './noveltyModel.js';
 import ServiceRequest from './serviceRequestModel.js';
 import RentalApplication from './rentalApplicationModel.js';
 import RentalContract from './rentalContractModel.js';
+import ChatbotFeature from './chatbotFeatureModel.js';
+import ChatbotConversation from './chatbotConversationModel.js';
+import ChatbotMessage from './chatbotMessageModel.js';
+import ChatbotAuditLog from './chatbotAuditLogModel.js';
 
 // -------------------- Role - User --------------------
 
@@ -256,6 +260,78 @@ RentalContract.belongsTo(Warehouse, {
     as: 'warehouse',
 });
 
+// -------------------- Chatbot Relations --------------------
+
+// Un usuario puede tener muchas conversaciones de chatbot
+User.hasMany(ChatbotConversation, {
+    foreignKey: 'userId',
+    as: 'chatbotConversations',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+});
+
+// Una conversación pertenece a un usuario
+ChatbotConversation.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user',
+});
+
+// Una conversación puede tener muchos mensajes
+ChatbotConversation.hasMany(ChatbotMessage, {
+    foreignKey: 'conversationId',
+    as: 'messages',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+});
+
+// Un mensaje pertenece a una conversación
+ChatbotMessage.belongsTo(ChatbotConversation, {
+    foreignKey: 'conversationId',
+    as: 'conversation',
+});
+
+// Un usuario puede tener muchos mensajes
+User.hasMany(ChatbotMessage, {
+    foreignKey: 'userId',
+    as: 'chatbotMessages',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+});
+
+// Un mensaje pertenece a un usuario
+ChatbotMessage.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user',
+});
+
+// Un usuario puede tener muchos registros de auditoría
+User.hasMany(ChatbotAuditLog, {
+    foreignKey: 'userId',
+    as: 'chatbotAuditLogs',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+});
+
+// Un registro de auditoría pertenece a un usuario
+ChatbotAuditLog.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user',
+});
+
+// Una conversación puede tener muchos registros de auditoría
+ChatbotConversation.hasMany(ChatbotAuditLog, {
+    foreignKey: 'conversationId',
+    as: 'auditLogs',
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+});
+
+// Un registro de auditoría pertenece a una conversación (opcional)
+ChatbotAuditLog.belongsTo(ChatbotConversation, {
+    foreignKey: 'conversationId',
+    as: 'conversation',
+});
+
 // PaymentTransaction no tiene FK con otras tablas por diseño:
 // las transacciones de pago se identifican por 'reference' (orden externa)
-export { Role, User, RefreshToken, LoginAttempt, PaymentTransaction, Warehouse, Rental, Notification, Movement, Novelty, ServiceRequest, RentalApplication, RentalContract };
+export { Role, User, RefreshToken, LoginAttempt, PaymentTransaction, Warehouse, Rental, Notification, Movement, Novelty, ServiceRequest, RentalApplication, RentalContract, ChatbotFeature, ChatbotConversation, ChatbotMessage, ChatbotAuditLog };

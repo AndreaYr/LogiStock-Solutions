@@ -1,5 +1,0 @@
-﻿src/services/loginAttemptService.ts(23,39): error TS2339: Property 'findRecentByEmail' does not exist on type 'LoginAttemptRepository'.
-src/services/loginAttemptService.ts(29,29): error TS2339: Property 'MAX_LOGIN_ATTEMPTS' does not exist on type '{ PORT: number; NODE_ENV: string; ALLOWED_ORIGINS: string[]; APP_URL: string; DB_HOST: string; DB_PORT: number; DB_NAME: string; DB_USER: string; DB_PASSWORD: string; JWT_ACCESS_SECRET: string; JWT_REFRESH_SECRET: string; ... 6 more ...; RESEND_FROM_EMAIL: string; }'.
-src/services/refreshTokenService.ts(12,53): error TS2339: Property 'JWT_REFRESH_EXPIRES_DAYS' does not exist on type '{ PORT: number; NODE_ENV: string; ALLOWED_ORIGINS: string[]; APP_URL: string; DB_HOST: string; DB_PORT: number; DB_NAME: string; DB_USER: string; DB_PASSWORD: string; JWT_ACCESS_SECRET: string; JWT_REFRESH_SECRET: string; ... 6 more ...; RESEND_FROM_EMAIL: string; }'.
-src/services/refreshTokenService.ts(14,39): error TS2339: Property 'create' does not exist on type 'typeof RefreshTokenRepository'.
-src/services/refreshTokenService.ts(26,59): error TS2339: Property 'findByToken' does not exist on type 'typeof RefreshTokenRepository'.

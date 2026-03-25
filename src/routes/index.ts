@@ -17,6 +17,7 @@ import serviceRequestRoutes from './serviceRequestRoutes.js';
 import rentalApplicationRoutes from './rentalApplicationRoutes.js';
 import rentalContractRoutes from './rentalContractRoutes.js';
 import reportRoutes from './reportRoutes.js';
+import chatbotRoutes from './chatbotRoutes.js';
 
 const router = Router();
 
@@ -33,6 +34,7 @@ router.use('/service-requests', serviceRequestRoutes);
 router.use('/rental-applications', rentalApplicationRoutes);
 router.use('/contracts', rentalContractRoutes);
 router.use('/reports', reportRoutes);
+router.use('/chatbot', chatbotRoutes);
 
 export default router;
 
