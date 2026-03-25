@@ -39,6 +39,7 @@ export interface ContractData {
     merchandiseType: string;
     hasDangerousGoods: boolean;
     requiresRefrigeration: boolean;
+    rentalDuration: 'MONTHLY' | 'SEMESTER' | 'ANNUAL';
 }
 
 /**
@@ -107,21 +108,31 @@ export async function generateContractPdf(data: ContractData): Promise<string> {
         doc.moveDown(1);
 
         // ── Precio ───────────────────────────────────────────────────────────────
+        const durationMonths = data.rentalDuration === 'ANNUAL' ? 12 : data.rentalDuration === 'SEMESTER' ? 6 : 1;
+        const totalPrice = data.monthlyPrice * durationMonths;
+
         doc.fontSize(12).font('Helvetica-Bold').text('CLÁUSULA SEGUNDA — PRECIO Y FORMA DE PAGO');
         doc.moveDown(0.3);
         doc.fontSize(10).font('Helvetica').text(
             `El canon mensual de arrendamiento es de COP ${data.monthlyPrice.toLocaleString('es-CO')} ` +
-            `(${numToWords(data.monthlyPrice)} pesos colombianos), pagaderos dentro de los primeros ` +
-            `cinco (5) días calendario de cada mes a través de la plataforma LogiStock.`
+            `(${numToWords(data.monthlyPrice)} pesos colombianos). ` +
+            `El valor total del período contratado es de COP ${totalPrice.toLocaleString('es-CO')} ` +
+            `(${numToWords(totalPrice)} pesos colombianos), pagadero a través de la plataforma LogiStock.`
         );
         doc.moveDown(1);
 
         // ── Duración ────────────────────────────────────────────────────────────
+        const durationLabel = data.rentalDuration === 'ANNUAL'
+            ? 'doce (12) meses'
+            : data.rentalDuration === 'SEMESTER'
+            ? 'seis (6) meses'
+            : 'un (1) mes';
+
         doc.fontSize(12).font('Helvetica-Bold').text('CLÁUSULA TERCERA — DURACIÓN');
         doc.moveDown(0.3);
         doc.fontSize(10).font('Helvetica').text(
-            'El presente contrato tendrá una duración inicial de doce (12) meses contados desde ' +
-            'la fecha de firma por ambas partes, prorrogable automáticamente por períodos iguales, ' +
+            `El presente contrato tendrá una duración de ${durationLabel} contados desde ` +
+            'la fecha de firma por ambas partes, prorrogable de mutuo acuerdo, ' +
             'salvo comunicación en contrario con treinta (30) días de anticipación.'
         );
         doc.moveDown(1);
@@ -279,20 +290,30 @@ export async function generateSignedContractPdf(data: SignedContractData): Promi
         );
         doc.moveDown(1);
 
+        const durationMonths2 = data.rentalDuration === 'ANNUAL' ? 12 : data.rentalDuration === 'SEMESTER' ? 6 : 1;
+        const totalPrice2 = data.monthlyPrice * durationMonths2;
+
         doc.fontSize(12).font('Helvetica-Bold').text('CLÁUSULA SEGUNDA — PRECIO Y FORMA DE PAGO');
         doc.moveDown(0.3);
         doc.fontSize(10).font('Helvetica').text(
             `El canon mensual de arrendamiento es de COP ${data.monthlyPrice.toLocaleString('es-CO')} ` +
-            `(${numToWords(data.monthlyPrice)} pesos colombianos), pagaderos dentro de los primeros ` +
-            `cinco (5) días calendario de cada mes a través de la plataforma LogiStock.`
+            `(${numToWords(data.monthlyPrice)} pesos colombianos). ` +
+            `El valor total del período contratado es de COP ${totalPrice2.toLocaleString('es-CO')} ` +
+            `(${numToWords(totalPrice2)} pesos colombianos), pagadero a través de la plataforma LogiStock.`
         );
         doc.moveDown(1);
+
+        const durationLabel2 = data.rentalDuration === 'ANNUAL'
+            ? 'doce (12) meses'
+            : data.rentalDuration === 'SEMESTER'
+            ? 'seis (6) meses'
+            : 'un (1) mes';
 
         doc.fontSize(12).font('Helvetica-Bold').text('CLÁUSULA TERCERA — DURACIÓN');
         doc.moveDown(0.3);
         doc.fontSize(10).font('Helvetica').text(
-            'El presente contrato tendrá una duración inicial de doce (12) meses contados desde ' +
-            'la fecha de firma por ambas partes, prorrogable automáticamente por períodos iguales, ' +
+            `El presente contrato tendrá una duración de ${durationLabel2} contados desde ` +
+            'la fecha de firma por ambas partes, prorrogable de mutuo acuerdo, ' +
             'salvo comunicación en contrario con treinta (30) días de anticipación.'
         );
         doc.moveDown(1);

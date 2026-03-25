@@ -3,6 +3,7 @@ import { Model, Optional } from 'sequelize';
 export type DocumentType = 'CC' | 'CE' | 'PASAPORTE';
 export type ApplicationStatus = 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
 export type OfacStatus = 'CLEAR' | 'FLAGGED' | 'ERROR' | 'PENDING';
+export type RentalDuration = 'MONTHLY' | 'SEMESTER' | 'ANNUAL';
 
 export interface IRentalApplicationAttributes {
     id: number;
@@ -19,6 +20,7 @@ export interface IRentalApplicationAttributes {
     hasDangerousGoods: boolean;
     requiresRefrigeration: boolean;
     acceptsTerms: boolean;
+    rentalDuration: RentalDuration;
     status: ApplicationStatus;
     rejectionReason: string | null;
     ofacStatus: OfacStatus;
