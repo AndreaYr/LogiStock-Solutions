@@ -38,7 +38,7 @@ function baseLayout(title: string, body: string): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>\${title}</title>
+  <title>${title}</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f5faf8;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5faf8;padding:60px 0;">
@@ -63,7 +63,7 @@ function baseLayout(title: string, body: string): string {
           <!-- Body Content -->
           <tr>
             <td style="padding:48px 40px;color:#333333;">
-              \${body}
+              ${body}
             </td>
           </tr>
           <!-- Sophisticated Footer -->
@@ -82,7 +82,7 @@ function baseLayout(title: string, body: string): string {
                 <tr>
                   <td align="center">
                     <p style="margin:0;color:#999999;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">
-                      © \${new Date().getFullYear()} LogiStock Solutions.
+                      © ${new Date().getFullYear()} LogiStock Solutions.
                     </p>
                     <p style="margin:8px 0 0;color:#999999;font-size:12px;">
                       Este es un correo automático. Por favor, no respondas.<br>
