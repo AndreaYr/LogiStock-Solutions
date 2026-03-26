@@ -13,6 +13,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Crear la app de express
 const app = express();
 
+// Confiar en proxies (Amplify, nginx, load balancers)
+// Necesario para que express-rate-limit detecte correctamente X-Forwarded-For
+app.set('trust proxy', 1);
+
 // Middlewares globales
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
