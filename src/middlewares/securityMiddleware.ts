@@ -39,5 +39,9 @@ export const rateLimiter = rateLimit({
     limit: 100, // Límite de 100 peticiones por IP por cada ventana (windowMs)
     standardHeaders: 'draft-8', // Draft-8 o un valor estándar
     legacyHeaders: false, // Deshabilitar `X-RateLimit-*` headers
-    message: { message: 'Demasiadas peticiones desde esta IP, por favor inténtalo de nuevo después de 15 minutos.' }
+    message: { message: 'Demasiadas peticiones desde esta IP, por favor inténtalo de nuevo después de 15 minutos.' },
+    // Confiar en proxies para obtener IP correcta desde X-Forwarded-For
+    keyGenerator: (req, res) => {
+        return req.ip || req.socket.remoteAddress || 'unknown';
+    },
 });
