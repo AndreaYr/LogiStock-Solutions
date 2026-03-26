@@ -40,8 +40,6 @@ export const rateLimiter = rateLimit({
     standardHeaders: 'draft-8', // Draft-8 o un valor estándar
     legacyHeaders: false, // Deshabilitar `X-RateLimit-*` headers
     message: { message: 'Demasiadas peticiones desde esta IP, por favor inténtalo de nuevo después de 15 minutos.' },
-    // Confiar en proxies para obtener IP correcta desde X-Forwarded-For
-    keyGenerator: (req, res) => {
-        return req.ip || req.socket.remoteAddress || 'unknown';
-    },
+    // Skip para health check
+    skip: (req) => req.path === '/health',
 });
