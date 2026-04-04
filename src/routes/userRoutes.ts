@@ -3,6 +3,7 @@
  * Todas requieren JWT (authenticate).
  *
  * GET    /api/users        → solo ADMIN
+ * POST   /api/users        → solo ADMIN (crear usuario)
  * GET    /api/users/me     → perfil propio
  * GET    /api/users/:id    → propio o ADMIN
  * PUT    /api/users/:id    → propio o ADMIN
@@ -21,6 +22,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/',                         authorize(UserRole.ADMIN, UserRole.JEFE_BODEGA),                       UserController.findAll);
+router.post('/',                        authorize(UserRole.ADMIN),                                            UserController.create);
 router.get('/me',                                                                         UserController.me);
 router.get('/:id',                                                                        UserController.findById);
 router.put('/:id',                                                                        UserController.updateProfile);
