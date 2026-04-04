@@ -99,6 +99,22 @@ export const UserController = {
         }
     },
 
+    /** POST /api/users  → crear usuario (solo ADMIN) */
+    async create(req: Request, res: Response): Promise<void> {
+        try {
+            const { firstName, lastName, email, password, phone, roleId } = req.body;
+            if (!firstName || !lastName || !email || !password || !roleId) {
+                res.status(400).json({ message: 'firstName, lastName, email, password y roleId son requeridos.' });
+                return;
+            }
+            const user = await userService.createByAdmin({ firstName, lastName, email, password, phone, roleId: Number(roleId) });
+            res.status(201).json({ message: 'Usuario creado exitosamente.', user });
+        } catch (err: any) {
+            const status = err.message.includes('ya está registrado') ? 409 : 500;
+            res.status(status).json({ message: err.message });
+        }
+    },
+
     /** DELETE /api/users/:id  → desactivar cuenta (solo ADMIN) */
     async deactivate(req: Request, res: Response): Promise<void> {
         try {

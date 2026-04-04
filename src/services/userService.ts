@@ -74,6 +74,32 @@ class UserService {
         await userRepo.update(id, { password: hashed });
     }
 
+    /** Crea un usuario directamente desde el panel admin (sin verificación de email) */
+    async createByAdmin(dto: { firstName: string; lastName: string; email: string; password: string; phone?: string; roleId: number }) {
+        const existing = await userRepo.findByEmail(dto.email);
+        if (existing) throw new Error('El email ya está registrado.');
+
+        const hashed = await bcrypt.hash(dto.password, 12);
+        const user = await userRepo.create({
+            firstName: dto.firstName,
+            lastName: dto.lastName,
+            email: dto.email,
+            password: hashed,
+            phone: dto.phone ?? null,
+            roleId: dto.roleId,
+            isActive: true,
+            isVerified: true,
+            lastLogin: null,
+            resetPasswordToken: null,
+            resetPasswordExpires: null,
+            emailVerificationToken: null,
+            emailVerificationExpires: null,
+        });
+
+        const { password: _, ...safe } = user.toJSON() as any;
+        return safe;
+    }
+
     /** Desactiva la cuenta (soft-delete lógico) */
     async deactivate(id: number) {
         const user = await userRepo.findById(id);
