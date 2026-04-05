@@ -9,7 +9,7 @@
 import { Request, Response } from 'express';
 import wompiService from '../services/wompiService.js';
 import notificationService from '../services/notificationService.js';
-import { Rental, Warehouse } from '../models/index.js';
+import { Rental, Warehouse, RentalContract, RentalApplication } from '../models/index.js';
 import type { IWompiWebhookEvent } from '../interfaces/wompiInterfaces.js';
 
 export const WompiController = {
@@ -86,7 +86,7 @@ export const WompiController = {
                 event.data.transaction,
             );
 
-            // ── Generar notificación según el estado del pago ─────────────────
+            // ── Activar bodega y notificar según el estado del pago ──────────
             try {
                 // La referencia tiene formato: LOGI-{warehouseId}-{timestamp}
                 const parts = event.data.transaction.reference?.split('-');
@@ -99,12 +99,65 @@ export const WompiController = {
                     const warehouse = await Warehouse.findByPk(warehouseId);
                     if (warehouse) warehouseName = warehouse.description;
 
-                    // Buscar el alquiler activo para identificar al usuario
-                    const rental = await Rental.findOne({
-                        where: { warehouseId, status: 'ACTIVE' },
-                        order: [['createdAt', 'DESC']],
+                    // Buscar el contrato FIRMADO para identificar al cliente
+                    const contract = await RentalContract.findOne({
+                        where: { warehouseId, status: 'SIGNED' },
+                        include: [{ model: RentalApplication, as: 'application' }],
                     });
-                    if (rental) rentalUserId = rental.userId;
+
+                    if (contract) {
+                        rentalUserId = contract.userId;
+
+                        if (status === 'APPROVED') {
+                            // Idempotencia: evitar duplicados si el webhook llega más de una vez
+                            const existingRental = await Rental.findOne({
+                                where: { warehouseId, userId: contract.userId, status: 'ACTIVE' },
+                            });
+
+                            if (!existingRental) {
+                                // Calcular fecha de fin según duración del contrato
+                                const app = (contract as any).application as RentalApplication | null;
+                                const startDate = new Date();
+                                const endDate = new Date(startDate);
+
+                                if (app?.rentalDuration === 'SEMESTER') {
+                                    endDate.setMonth(endDate.getMonth() + 6);
+                                } else if (app?.rentalDuration === 'ANNUAL') {
+                                    endDate.setFullYear(endDate.getFullYear() + 1);
+                                } else {
+                                    // MONTHLY por defecto
+                                    endDate.setMonth(endDate.getMonth() + 1);
+                                }
+
+                                // Crear el registro de arrendamiento activo
+                                await Rental.create({
+                                    userId: contract.userId,
+                                    warehouseId,
+                                    monthlyAmount: warehouse ? warehouse.monthlyPrice : 0,
+                                    status: 'ACTIVE',
+                                    startDate,
+                                    endDate,
+                                });
+
+                                // Deshabilitar la bodega para otros clientes
+                                await Warehouse.update(
+                                    { isAvailable: false },
+                                    { where: { id: warehouseId } }
+                                );
+
+                                console.log(
+                                    `[Wompi Webhook] Rental creado y bodega ${warehouseId} deshabilitada para usuario ${contract.userId}.`
+                                );
+                            }
+                        }
+                    } else {
+                        // Fallback: si no hay contrato SIGNED, buscar rental activo existente
+                        const rental = await Rental.findOne({
+                            where: { warehouseId, status: 'ACTIVE' },
+                            order: [['createdAt', 'DESC']],
+                        });
+                        if (rental) rentalUserId = rental.userId;
+                    }
                 }
 
                 if (rentalUserId) {
