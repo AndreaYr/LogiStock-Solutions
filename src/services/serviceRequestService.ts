@@ -1,8 +1,11 @@
+import { Op } from "sequelize";
 import { ServiceRequestRepository } from "../repositories/serviceRequestRepositories.js";
 import { Rental, Warehouse, User } from "../models/index.js";
 import { UserRole } from "../interfaces/interfaces.js";
 import { ServiceRequestType, ServiceRequestStatus } from "../interfaces/serviceRequestInterfaces.js";
 import notificationService from './notificationService.js';
+
+const MAX_REQUESTS_PER_DAY = 3;
 
 const serviceRequestRepo = new ServiceRequestRepository();
 
@@ -62,9 +65,30 @@ export class ServiceRequestService {
     }
 
     /**
+     * Devuelve la disponibilidad de días en un mes dado.
+     * Retorna el conteo de solicitudes PENDING/APPROVED por fecha y el máximo permitido.
+     */
+    async getAvailability(year: number, month: number) {
+        const monthStr = String(month).padStart(2, '0');
+        const requests = await serviceRequestRepo.findAll({
+            scheduledDate: { [Op.like]: `${year}-${monthStr}-%` },
+            status: { [Op.in]: [ServiceRequestStatus.PENDING, ServiceRequestStatus.APPROVED] },
+        } as any);
+
+        const counts: Record<string, number> = {};
+        (requests as any[]).forEach((r) => {
+            if (r.scheduledDate) {
+                counts[r.scheduledDate] = (counts[r.scheduledDate] || 0) + 1;
+            }
+        });
+
+        return { counts, maxPerDay: MAX_REQUESTS_PER_DAY };
+    }
+
+    /**
      * Cliente crea una nueva solicitud (Ingreso, Retiro, Cancelación).
      */
-    async createRequest(userId: number, data: { warehouseId: number, type: ServiceRequestType, product?: string, quantity?: number, description?: string }) {
+    async createRequest(userId: number, data: { warehouseId: number, type: ServiceRequestType, product?: string, quantity?: number, description?: string, scheduledDate?: string, scheduledTime?: string }) {
         const warehouse = await Warehouse.findByPk(data.warehouseId);
         if (!warehouse) {
             throw new Error('Bodega no encontrada');
@@ -84,6 +108,24 @@ export class ServiceRequestService {
             if (!data.product || data.quantity == null) {
                 throw new Error('Debes proveer un producto y cantidad para solicitudes de Ingreso o Retiro.');
             }
+
+            // Validar fecha para INBOUND/OUTBOUND
+            if (!data.scheduledDate) {
+                throw new Error('Debes seleccionar una fecha para la solicitud.');
+            }
+            const today = new Date().toISOString().split('T')[0];
+            if (data.scheduledDate <= today) {
+                throw new Error('No puedes agendar una solicitud para el día de hoy o días pasados. Selecciona una fecha futura.');
+            }
+
+            // Validar disponibilidad del día
+            const existing = await serviceRequestRepo.findAll({
+                scheduledDate: data.scheduledDate,
+                status: { [Op.in]: [ServiceRequestStatus.PENDING, ServiceRequestStatus.APPROVED] },
+            } as any);
+            if ((existing as any[]).length >= MAX_REQUESTS_PER_DAY) {
+                throw new Error(`No hay disponibilidad para el día seleccionado. Máximo ${MAX_REQUESTS_PER_DAY} solicitudes por día.`);
+            }
         }
 
         // Crear la solicitud
@@ -94,7 +136,9 @@ export class ServiceRequestService {
             product: data.product || null,
             quantity: data.quantity || null,
             description: data.description || null,
-            status: ServiceRequestStatus.PENDING
+            status: ServiceRequestStatus.PENDING,
+            scheduledDate: data.scheduledDate || null,
+            scheduledTime: data.scheduledTime || null,
         });
 
         // Notificar a los jefes de bodega sobre la nueva solicitud

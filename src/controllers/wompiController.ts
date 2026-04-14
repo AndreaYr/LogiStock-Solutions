@@ -12,6 +12,56 @@ import notificationService from '../services/notificationService.js';
 import { Rental, Warehouse, RentalContract, RentalApplication } from '../models/index.js';
 import type { IWompiWebhookEvent } from '../interfaces/wompiInterfaces.js';
 
+/**
+ * Activa el arrendamiento para una bodega tras un pago APPROVED.
+ * Idempotente: si ya existe un Rental activo, no crea duplicados.
+ * Retorna el Rental creado (o el existente si ya había uno).
+ */
+async function activateRental(warehouseId: number): Promise<{ rental: Rental | null; warehouseName: string; userId: number | null }> {
+    const warehouse = await Warehouse.findByPk(warehouseId);
+    const warehouseName = warehouse?.description ?? 'la bodega';
+
+    const contract = await RentalContract.findOne({
+        where: { warehouseId, status: 'SIGNED' },
+        include: [{ model: RentalApplication, as: 'application' }],
+    });
+
+    if (!contract) return { rental: null, warehouseName, userId: null };
+
+    const userId = contract.userId;
+
+    // Idempotencia: si ya existe un rental activo, retornar sin duplicar
+    const existing = await Rental.findOne({ where: { warehouseId, userId, status: 'ACTIVE' } });
+    if (existing) return { rental: existing, warehouseName, userId };
+
+    // Calcular fecha de fin según duración del contrato
+    const app = (contract as any).application as RentalApplication | null;
+    const startDate = new Date();
+    const endDate = new Date(startDate);
+    if (app?.rentalDuration === 'SEMESTER') {
+        endDate.setMonth(endDate.getMonth() + 6);
+    } else if (app?.rentalDuration === 'ANNUAL') {
+        endDate.setFullYear(endDate.getFullYear() + 1);
+    } else {
+        endDate.setMonth(endDate.getMonth() + 1);
+    }
+
+    const rental = await Rental.create({
+        userId,
+        warehouseId,
+        monthlyAmount: warehouse?.monthlyPrice ?? 0,
+        status: 'ACTIVE',
+        startDate,
+        endDate,
+    });
+
+    await Warehouse.update({ isAvailable: false }, { where: { id: warehouseId } });
+
+    console.log(`[Wompi] Rental creado y bodega ${warehouseId} deshabilitada para usuario ${userId}.`);
+
+    return { rental, warehouseName, userId };
+}
+
 export const WompiController = {
 
     /**
@@ -92,88 +142,21 @@ export const WompiController = {
                 const parts = event.data.transaction.reference?.split('-');
                 const warehouseId = parts && parts.length >= 2 ? parseInt(parts[1], 10) : null;
 
-                let warehouseName = 'la bodega';
-                let rentalUserId: number | null = null;
-
                 if (warehouseId) {
-                    const warehouse = await Warehouse.findByPk(warehouseId);
-                    if (warehouse) warehouseName = warehouse.description;
-
-                    // Buscar el contrato FIRMADO para identificar al cliente
-                    const contract = await RentalContract.findOne({
-                        where: { warehouseId, status: 'SIGNED' },
-                        include: [{ model: RentalApplication, as: 'application' }],
-                    });
-
-                    if (contract) {
-                        rentalUserId = contract.userId;
-
-                        if (status === 'APPROVED') {
-                            // Idempotencia: evitar duplicados si el webhook llega más de una vez
-                            const existingRental = await Rental.findOne({
-                                where: { warehouseId, userId: contract.userId, status: 'ACTIVE' },
-                            });
-
-                            if (!existingRental) {
-                                // Calcular fecha de fin según duración del contrato
-                                const app = (contract as any).application as RentalApplication | null;
-                                const startDate = new Date();
-                                const endDate = new Date(startDate);
-
-                                if (app?.rentalDuration === 'SEMESTER') {
-                                    endDate.setMonth(endDate.getMonth() + 6);
-                                } else if (app?.rentalDuration === 'ANNUAL') {
-                                    endDate.setFullYear(endDate.getFullYear() + 1);
-                                } else {
-                                    // MONTHLY por defecto
-                                    endDate.setMonth(endDate.getMonth() + 1);
-                                }
-
-                                // Crear el registro de arrendamiento activo
-                                await Rental.create({
-                                    userId: contract.userId,
-                                    warehouseId,
-                                    monthlyAmount: warehouse ? warehouse.monthlyPrice : 0,
-                                    status: 'ACTIVE',
-                                    startDate,
-                                    endDate,
-                                });
-
-                                // Deshabilitar la bodega para otros clientes
-                                await Warehouse.update(
-                                    { isAvailable: false },
-                                    { where: { id: warehouseId } }
-                                );
-
-                                console.log(
-                                    `[Wompi Webhook] Rental creado y bodega ${warehouseId} deshabilitada para usuario ${contract.userId}.`
-                                );
-                            }
-                        }
-                    } else {
-                        // Fallback: si no hay contrato SIGNED, buscar rental activo existente
-                        const rental = await Rental.findOne({
-                            where: { warehouseId, status: 'ACTIVE' },
-                            order: [['createdAt', 'DESC']],
-                        });
-                        if (rental) rentalUserId = rental.userId;
-                    }
-                }
-
-                if (rentalUserId) {
                     if (status === 'APPROVED') {
-                        await notificationService.notifyPaymentConfirmed(
-                            rentalUserId,
-                            warehouseName,
-                            amount_in_cents
-                        );
+                        const { warehouseName, userId } = await activateRental(warehouseId);
+                        if (userId) {
+                            await notificationService.notifyPaymentConfirmed(userId, warehouseName, amount_in_cents);
+                        }
                     } else if (status === 'DECLINED' || status === 'ERROR') {
-                        await notificationService.notifyPaymentFailed(rentalUserId, warehouseName);
+                        const warehouse = await Warehouse.findByPk(warehouseId);
+                        const warehouseName = warehouse?.description ?? 'la bodega';
+                        const rental = await Rental.findOne({ where: { warehouseId, status: 'ACTIVE' }, order: [['createdAt', 'DESC']] });
+                        if (rental) await notificationService.notifyPaymentFailed(rental.userId, warehouseName);
                     }
                 }
             } catch (notifErr) {
-                // Las notificaciones no deben interrumpir la respuesta al webhook
-                console.error('[Wompi Webhook] Error generando notificación:', notifErr);
+                console.error('[Wompi Webhook] Error procesando evento:', notifErr);
             }
 
             console.log(`[Wompi Webhook] Transacción ${id} → ${status} guardada en BD.`);
@@ -193,6 +176,80 @@ export const WompiController = {
             const id = String(req.params.id);
             const transaction = await wompiService.getTransactionById(id);
             res.status(200).json(transaction);
+        } catch (err: any) {
+            res.status(500).json({ message: err.message });
+        }
+    },
+
+    /**
+     * POST /api/wompi/simulate-payment  ← SOLO DEVELOPMENT
+     * Simula un pago aprobado sin pasar por Wompi.
+     * Útil para probar el flujo completo en local.
+     *
+     * Body: { warehouseId: number }
+     */
+    async simulatePayment(req: Request, res: Response): Promise<void> {
+        if (process.env.NODE_ENV === 'production') {
+            res.status(403).json({ message: 'No disponible en producción.' });
+            return;
+        }
+        try {
+            const warehouseId = parseInt(req.body.warehouseId, 10);
+            if (!warehouseId || isNaN(warehouseId)) {
+                res.status(400).json({ message: 'warehouseId es requerido.' });
+                return;
+            }
+            const { rental, warehouseName, userId } = await activateRental(warehouseId);
+            if (!userId) {
+                res.status(404).json({ message: 'No se encontró un contrato SIGNED para esta bodega.' });
+                return;
+            }
+            res.status(200).json({ activated: true, rental, warehouseName, userId });
+        } catch (err: any) {
+            res.status(500).json({ message: err.message });
+        }
+    },
+
+    /**
+     * POST /api/wompi/confirm-payment
+     * El frontend llama a este endpoint al regresar del checkout de Wompi.
+     * Verifica el estado de la transacción y activa el arrendamiento si APPROVED.
+     * Es idempotente: puede llamarse múltiples veces sin crear duplicados.
+     *
+     * Body: { transactionId: string }
+     */
+    async confirmPayment(req: Request, res: Response): Promise<void> {
+        try {
+            const { transactionId } = req.body;
+            if (!transactionId) {
+                res.status(400).json({ message: 'transactionId es requerido.' });
+                return;
+            }
+
+            // Verificar estado real con Wompi
+            const transaction = await wompiService.getTransactionById(String(transactionId));
+
+            if (transaction.status !== 'APPROVED') {
+                res.status(200).json({ activated: false, status: transaction.status });
+                return;
+            }
+
+            // Parsear warehouseId de la referencia: LOGI-{warehouseId}-{timestamp}
+            const parts = transaction.reference?.split('-');
+            const warehouseId = parts && parts.length >= 2 ? parseInt(parts[1], 10) : null;
+
+            if (!warehouseId || isNaN(warehouseId)) {
+                res.status(422).json({ message: 'No se pudo identificar la bodega desde la referencia.' });
+                return;
+            }
+
+            const { rental, warehouseName, userId } = await activateRental(warehouseId);
+
+            if (userId) {
+                await notificationService.notifyPaymentConfirmed(userId, warehouseName, transaction.amount_in_cents);
+            }
+
+            res.status(200).json({ activated: true, status: 'APPROVED', rental });
         } catch (err: any) {
             res.status(500).json({ message: err.message });
         }

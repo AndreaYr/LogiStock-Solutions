@@ -23,6 +23,8 @@ export type UtilitiesResponsible = 'ARRENDADOR' | 'ARRENDATARIO' | 'COMPARTIDO';
 // Interface que define todos los atributos de la tabla Warehouse
 export interface IWarehouseAttributes {
     id: number;
+    /** Código único de 6 dígitos generado automáticamente al crear la bodega */
+    code: string;
     /** Nombre comercial / identificador de la bodega (ej. "LogiStock Norte A-01") */
     name: string;
     /** Descripción detallada: condiciones, restricciones, características especiales */
@@ -68,6 +70,7 @@ export interface IWarehouseAttributes {
 export interface IWarehouseCreationAttributes extends Optional<
     IWarehouseAttributes,
     | 'id'
+    | 'code'
     | 'description'
     | 'warehouseType'
     | 'city'
@@ -95,6 +98,7 @@ export interface IWarehouse extends Model<IWarehouseAttributes, IWarehouseCreati
 
 class Warehouse extends Model<IWarehouseAttributes, IWarehouseCreationAttributes> implements IWarehouse {
     declare id: number;
+    declare code: string;
     declare name: string;
     declare description: string;
     declare warehouseType: WarehouseType;
@@ -124,6 +128,12 @@ Warehouse.init({
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
+    },
+    code: {
+        type: DataTypes.STRING(6),
+        allowNull: false,
+        unique: true,
+        comment: 'Código único de 6 dígitos generado automáticamente al crear la bodega',
     },
     name: {
         type: DataTypes.STRING(100),

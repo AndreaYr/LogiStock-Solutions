@@ -13,6 +13,7 @@ router.use(authenticate);
  * Roles permitidos: admin, jefe_bodega, auxiliar, operador (para ver órdenes del día)
  */
 router.get('/all', authorize(UserRole.ADMIN, UserRole.JEFE_BODEGA, UserRole.AUXILIAR, UserRole.OPERADOR), ServiceRequestController.getAllRequests);
+router.get('/availability', ServiceRequestController.getAvailability);
 
 /**
  * Listar TODAS las solicitudes del cliente autenticado (sin filtro de bodega)

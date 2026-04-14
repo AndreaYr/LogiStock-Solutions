@@ -48,11 +48,23 @@ export class ServiceRequestController {
         }
     }
 
+    /** GET /api/service-requests/availability?year=YYYY&month=MM */
+    static async getAvailability(req: Request, res: Response): Promise<void> {
+        try {
+            const year = parseInt(req.query.year as string, 10) || new Date().getFullYear();
+            const month = parseInt(req.query.month as string, 10) || new Date().getMonth() + 1;
+            const result = await serviceRequestService.getAvailability(year, month);
+            res.status(200).json(result);
+        } catch (err: any) {
+            res.status(500).json({ message: err.message });
+        }
+    }
+
     /** POST /api/service-requests */
     static async create(req: Request, res: Response): Promise<void> {
         try {
             const userId = req.user!.userId;
-            const { warehouseId, type, product, quantity, description } = req.body;
+            const { warehouseId, type, product, quantity, description, scheduledDate, scheduledTime } = req.body;
 
             if (!warehouseId || !type || !Object.values(ServiceRequestType).includes(type)) {
                 res.status(400).json({ message: 'Datos incompletos o tipo inválido' });
@@ -64,7 +76,9 @@ export class ServiceRequestController {
                 type,
                 product,
                 quantity,
-                description
+                description,
+                scheduledDate,
+                scheduledTime,
             });
             res.status(201).json(newRequest);
         } catch (err: any) {
