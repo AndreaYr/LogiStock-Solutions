@@ -49,7 +49,12 @@ export const AuthController = {
             res.status(200).json({ message, ...result });
         } catch (err: any) {
             console.error('[AuthController] ❌ ERROR EN LOGIN:', err);
-            const status = err.message?.includes('Credenciales') || err.message?.includes('bloqueada') ? 401 : 500;
+            const status =
+                err.message?.includes('Credenciales') ||
+                err.message?.includes('bloqueada') ||
+                err.message?.includes('verificar tu email') ||
+                err.message?.includes('desactivada')
+                    ? 401 : 500;
             res.status(status).json({
                 message: err.message || 'Error interno del servidor',
             });
