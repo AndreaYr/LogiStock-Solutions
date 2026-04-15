@@ -53,6 +53,7 @@ async function activateRental(warehouseId: number): Promise<{ rental: Rental | n
         status: 'ACTIVE',
         startDate,
         endDate,
+        warehouseCode: warehouse?.code ?? null,
     });
 
     await Warehouse.update({ isAvailable: false }, { where: { id: warehouseId } });

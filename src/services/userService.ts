@@ -4,8 +4,10 @@
  */
 
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { UserRepository } from '../repositories/userRepositories.js';
 import { IUserAttributes } from '../interfaces/interfaces.js';
+import { sendVerificationEmail } from './emailService.js';
 
 const userRepo = new UserRepository();
 
@@ -74,12 +76,15 @@ class UserService {
         await userRepo.update(id, { password: hashed });
     }
 
-    /** Crea un usuario directamente desde el panel admin (sin verificación de email) */
+    /** Crea un usuario desde el panel admin — inactivo hasta que verifique su email */
     async createByAdmin(dto: { firstName: string; lastName: string; email: string; password: string; phone?: string; roleId: number }) {
         const existing = await userRepo.findByEmail(dto.email);
         if (existing) throw new Error('El email ya está registrado.');
 
         const hashed = await bcrypt.hash(dto.password, 12);
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
+
         const user = await userRepo.create({
             firstName: dto.firstName,
             lastName: dto.lastName,
@@ -87,14 +92,16 @@ class UserService {
             password: hashed,
             phone: dto.phone ?? null,
             roleId: dto.roleId,
-            isActive: true,
-            isVerified: true,
+            isActive: false,
+            isVerified: false,
             lastLogin: null,
             resetPasswordToken: null,
             resetPasswordExpires: null,
-            emailVerificationToken: null,
-            emailVerificationExpires: null,
+            emailVerificationToken: verificationToken,
+            emailVerificationExpires: verificationExpires,
         });
+
+        await sendVerificationEmail(dto.email, dto.firstName, verificationToken);
 
         const { password: _, ...safe } = user.toJSON() as any;
         return safe;
