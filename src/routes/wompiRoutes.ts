@@ -2,6 +2,7 @@
  * Rutas de Wompi (pasarela de pago)
  *
  * POST /api/wompi/signature          → genera firma para el widget (requiere auth)
+ * POST /api/wompi/checkout-url       → genera URL de checkout (requiere auth)
  * GET  /api/wompi/transactions/:id   → consulta transacción (requiere auth)
  * POST /api/webhooks/wompi           → webhook de Wompi (SIN auth, firma verificada internamente)
  */
@@ -14,6 +15,7 @@ const router = Router();
 
 // Rutas protegidas
 router.post('/signature',           authenticate, WompiController.generateSignature);
+router.post('/checkout-url',        authenticate, WompiController.getCheckoutUrl);
 router.get('/transactions/:id',     authenticate, WompiController.getTransaction);
 router.post('/confirm-payment',     authenticate, WompiController.confirmPayment);
 router.post('/simulate-payment',    authenticate, WompiController.simulatePayment); // solo dev

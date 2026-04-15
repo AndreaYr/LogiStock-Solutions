@@ -211,6 +211,44 @@ export const WompiController = {
     },
 
     /**
+     * POST /api/wompi/checkout-url
+     * Genera la URL completa para redirigir al checkout de Wompi.
+     * El frontend simplemente redirige a esta URL sin problemas de CORS.
+     *
+     * Body: { reference, amountInCents, currency }
+     * Response: { checkoutUrl: string }
+     */
+    async getCheckoutUrl(req: Request, res: Response): Promise<void> {
+        try {
+            const { reference, amountInCents, currency } = req.body;
+
+            if (!reference || !amountInCents || !currency) {
+                res.status(400).json({ message: 'reference, amountInCents y currency son requeridos.' });
+                return;
+            }
+
+            // Generar firma
+            const { signature, publicKey } = wompiService.generateSignature({
+                reference,
+                amountInCents: Number(amountInCents),
+                currency,
+            });
+
+            // Construir URL de checkout
+            const checkoutUrl = new URL('https://checkout.wompi.co/p/');
+            checkoutUrl.searchParams.set('public-key', publicKey);
+            checkoutUrl.searchParams.set('currency', currency);
+            checkoutUrl.searchParams.set('amount-in-cents', String(amountInCents));
+            checkoutUrl.searchParams.set('reference', reference);
+            checkoutUrl.searchParams.set('signature:integrity', signature);
+
+            res.status(200).json({ checkoutUrl: checkoutUrl.toString() });
+        } catch (err: any) {
+            res.status(500).json({ message: err.message });
+        }
+    },
+
+    /**
      * POST /api/wompi/confirm-payment
      * El frontend llama a este endpoint al regresar del checkout de Wompi.
      * Verifica el estado de la transacción y activa el arrendamiento si APPROVED.
