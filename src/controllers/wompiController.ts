@@ -22,7 +22,7 @@ async function activateRental(warehouseId: number): Promise<{ rental: Rental | n
     const warehouseName = warehouse?.description ?? 'la bodega';
 
     const contract = await RentalContract.findOne({
-        where: { warehouseId, status: 'SIGNED' },
+        where: { warehouseId, status: ['SIGNED', 'PENDING_ADMIN'] },
         include: [{ model: RentalApplication, as: 'application' }],
     });
 
