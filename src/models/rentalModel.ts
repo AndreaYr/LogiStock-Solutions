@@ -14,6 +14,7 @@ class Rental extends Model<IRentalAttributes, IRentalCreationAttributes> impleme
     declare endDate: Date | null;
     declare monthlyAmount: number;
     declare status: 'ACTIVE' | 'FINISHED' | 'PENDING_PAYMENT';
+    declare warehouseCode: string | null;
     declare readonly createdAt: Date;
     declare readonly updatedAt: Date;
 }
@@ -62,6 +63,10 @@ Rental.init(
             type: DataTypes.ENUM('ACTIVE', 'FINISHED', 'PENDING_PAYMENT'),
             allowNull: false,
             defaultValue: 'ACTIVE',
+        },
+        warehouseCode: {
+            type: DataTypes.STRING(6),
+            allowNull: true,
         },
     },
     {
