@@ -19,11 +19,17 @@ export class ServiceRequestController {
     /** GET /api/service-requests/me — todas las solicitudes del cliente autenticado */
     static async getMine(req: Request, res: Response): Promise<void> {
         try {
-            const userId = req.user!.userId;
+            if (!req.user) {
+                console.log('[getMine] ERROR: req.user es undefined. Headers:', req.headers);
+                res.status(401).json({ message: 'Usuario no autenticado' });
+                return;
+            }
+            const userId = req.user.userId;
             const status = req.query.status as string | undefined;
             const requests = await serviceRequestService.listMyRequests(userId, status);
             res.status(200).json(requests);
         } catch (err: any) {
+            console.error('[getMine] Error:', err.message, err.stack);
             res.status(500).json({ message: err.message });
         }
     }
@@ -123,6 +129,52 @@ export class ServiceRequestController {
             }
 
             const updated = await serviceRequestService.assignAuxiliary(Number(id), Number(auxiliaryId));
+            res.status(200).json(updated);
+        } catch (err: any) {
+            res.status(400).json({ message: err.message });
+        }
+    }
+
+    /** PATCH /api/service-requests/:id/submit-report → Auxiliar envía reporte de completación */
+    static async submitReport(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            const auxiliaryId = req.user?.userId;
+            const reportData = req.body;
+
+            if (!auxiliaryId) {
+                res.status(401).json({ message: 'Usuario no autenticado' });
+                return;
+            }
+
+            const updated = await serviceRequestService.submitReport(
+                Number(id),
+                auxiliaryId,
+                reportData
+            );
+            res.status(200).json(updated);
+        } catch (err: any) {
+            res.status(400).json({ message: err.message });
+        }
+    }
+
+    /** PATCH /api/service-requests/:id/review → Jefe de bodega revisa y aprueba reporte */
+    static async reviewAndApproveReport(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            const jefeId = req.user?.userId;
+            const { approvalNotes } = req.body;
+
+            if (!jefeId) {
+                res.status(401).json({ message: 'Usuario no autenticado' });
+                return;
+            }
+
+            const updated = await serviceRequestService.reviewAndApproveReport(
+                Number(id),
+                jefeId,
+                approvalNotes
+            );
             res.status(200).json(updated);
         } catch (err: any) {
             res.status(400).json({ message: err.message });

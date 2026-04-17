@@ -41,7 +41,7 @@ router.post('/', authorize(UserRole.CLIENTE), ServiceRequestController.create);
 
 /**
  * Actualizar estado de solicitud (Aprobar, Rechazar, Completar)
- * Roles permitidos: admin, jefe_bodega, auxiliar, operador (para actualizar sus órdenes a IN_PROGRESS o COMPLETED)
+ * Roles permitidos: admin, jefe_bodega, auxiliar, operador
  */
 router.patch('/:id', authorize(UserRole.ADMIN, UserRole.JEFE_BODEGA, UserRole.AUXILIAR, UserRole.OPERADOR), ServiceRequestController.updateStatus);
 
@@ -50,5 +50,19 @@ router.patch('/:id', authorize(UserRole.ADMIN, UserRole.JEFE_BODEGA, UserRole.AU
  * Roles permitidos: admin, jefe_bodega, auxiliar (para auto-asignarse)
  */
 router.patch('/:id/assign-auxiliary', authorize(UserRole.ADMIN, UserRole.JEFE_BODEGA, UserRole.AUXILIAR), ServiceRequestController.assignAuxiliary);
+
+/**
+ * Auxiliar envía reporte de completación de orden
+ * Roles permitidos: auxiliar
+ * Body: { quantityProcessed, productsReceived[], productsReturned[], productsNotReceived[], observations, photos[] }
+ */
+router.patch('/:id/submit-report', authorize(UserRole.AUXILIAR), ServiceRequestController.submitReport);
+
+/**
+ * Jefe de bodega revisa y aprueba reporte del auxiliar
+ * Roles permitidos: jefe_bodega, admin
+ * Body: { approvalNotes? }
+ */
+router.patch('/:id/review', authorize(UserRole.JEFE_BODEGA, UserRole.ADMIN), ServiceRequestController.reviewAndApproveReport);
 
 export default router;

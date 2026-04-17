@@ -10,7 +10,8 @@ export enum ServiceRequestStatus {
     PENDING = 'PENDING',
     APPROVED = 'APPROVED',
     REJECTED = 'REJECTED',
-    COMPLETED = 'COMPLETED'
+    COMPLETED = 'COMPLETED',
+    APPROVED_BY_JEFE = 'APPROVED_BY_JEFE'
 }
 
 export interface IServiceRequestAttributes {
@@ -26,10 +27,14 @@ export interface IServiceRequestAttributes {
     scheduledTime?: string | null;  // Hora agendada (HH:mm)
     rejectionReason?: string | null;  // Razón de rechazo si status = REJECTED
     assignedAuxiliaryId?: number | null;  // FK a user (rol AUXILIARY)
+    completedByAuxiliaryId?: number | null;  // Auxiliar que completó
+    completedByAuxiliaryName?: string | null;  // Nombre del auxiliar que completó
+    completedAt?: Date | null;  // Fecha de completación
+    auxiliaryReport?: any;  // Reporte del auxiliar
     createdAt?: Date;
     updatedAt?: Date;
 }
 
-export interface IServiceRequestCreationAttributes extends Optional<IServiceRequestAttributes, 'id' | 'status' | 'product' | 'quantity' | 'description' | 'scheduledDate' | 'scheduledTime' | 'rejectionReason' | 'assignedAuxiliaryId' | 'createdAt' | 'updatedAt'> { }
+export interface IServiceRequestCreationAttributes extends Optional<IServiceRequestAttributes, 'id' | 'status' | 'product' | 'quantity' | 'description' | 'scheduledDate' | 'scheduledTime' | 'rejectionReason' | 'assignedAuxiliaryId' | 'completedByAuxiliaryId' | 'completedByAuxiliaryName' | 'completedAt' | 'auxiliaryReport' | 'createdAt' | 'updatedAt'> { }
 
 export interface IServiceRequest extends Model<IServiceRequestAttributes, IServiceRequestCreationAttributes>, IServiceRequestAttributes { }

@@ -15,6 +15,10 @@ class ServiceRequest extends Model<IServiceRequestAttributes, IServiceRequestCre
     declare scheduledTime: string | null;
     declare rejectionReason: string | null;
     declare assignedAuxiliaryId: number | null;
+    declare completedByAuxiliaryId: number | null;
+    declare completedByAuxiliaryName: string | null;
+    declare completedAt: Date | null;
+    declare auxiliaryReport: any;
     declare readonly createdAt: Date;
     declare readonly updatedAt: Date;
 }
@@ -88,6 +92,29 @@ ServiceRequest.init(
             },
             onDelete: 'SET NULL',
             onUpdate: 'CASCADE',
+        },
+        completedByAuxiliaryId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: 'users',
+                key: 'id',
+            },
+            onDelete: 'SET NULL',
+            onUpdate: 'CASCADE',
+        },
+        completedByAuxiliaryName: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        completedAt: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
+        auxiliaryReport: {
+            type: DataTypes.JSON,
+            allowNull: true,
+            defaultValue: null,
         },
     },
     {

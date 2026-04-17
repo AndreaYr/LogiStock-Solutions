@@ -64,11 +64,68 @@ async function forceSync() {
             END $$;
         `);
 
+        // Crear tabla service_requests si no existe
+        console.log('Creando tabla "service_requests" si no existe...');
+        
+        // Crear los tipos ENUM si no existen
+        await sequelize.query(`
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_service_request_type') THEN
+                    CREATE TYPE enum_service_request_type AS ENUM ('INBOUND', 'OUTBOUND', 'CANCELLATION');
+                END IF;
+            END $$;
+        `);
+        
+        await sequelize.query(`
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_service_request_status') THEN
+                    CREATE TYPE enum_service_request_status AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'COMPLETED');
+                END IF;
+            END $$;
+        `);
+        
+        await sequelize.query(`
+            CREATE TABLE IF NOT EXISTS "service_requests" (
+                id SERIAL PRIMARY KEY,
+                warehouse_id INTEGER NOT NULL REFERENCES warehouses(id) ON DELETE CASCADE,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                type enum_service_request_type NOT NULL,
+                product VARCHAR(255),
+                quantity INTEGER,
+                description TEXT,
+                status enum_service_request_status NOT NULL DEFAULT 'PENDING',
+                scheduled_date VARCHAR(10),
+                scheduled_time VARCHAR(5),
+                rejection_reason TEXT,
+                assigned_auxiliary_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                completed_by_auxiliary_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                completed_by_auxiliary_name VARCHAR(255),
+                completed_at TIMESTAMP,
+                auxiliary_report JSON,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // Crear índices si no existen
+        console.log('Creando índices en "service_requests"...');
+        await sequelize.query(`CREATE INDEX IF NOT EXISTS "service_requests_warehouse_id" ON "service_requests"(warehouse_id);`);
+        await sequelize.query(`CREATE INDEX IF NOT EXISTS "service_requests_user_id" ON "service_requests"(user_id);`);
+        await sequelize.query(`CREATE INDEX IF NOT EXISTS "service_requests_assigned_auxiliary_id" ON "service_requests"(assigned_auxiliary_id);`);
+        await sequelize.query(`CREATE INDEX IF NOT EXISTS "service_requests_status" ON "service_requests"(status);`);
+        await sequelize.query(`CREATE INDEX IF NOT EXISTS "service_requests_scheduled_date" ON "service_requests"(scheduled_date);`);
+
         console.log('Añadiendo columnas faltantes a la tabla "service_requests"...');
         await sequelize.query('ALTER TABLE "service_requests" ADD COLUMN IF NOT EXISTS "scheduled_date" VARCHAR(10);');
         await sequelize.query('ALTER TABLE "service_requests" ADD COLUMN IF NOT EXISTS "scheduled_time" VARCHAR(5);');
         await sequelize.query('ALTER TABLE "service_requests" ADD COLUMN IF NOT EXISTS "rejection_reason" TEXT;');
         await sequelize.query('ALTER TABLE "service_requests" ADD COLUMN IF NOT EXISTS "assigned_auxiliary_id" INTEGER;');
+        await sequelize.query('ALTER TABLE "service_requests" ADD COLUMN IF NOT EXISTS "completed_by_auxiliary_id" INTEGER REFERENCES users(id) ON DELETE SET NULL;');
+        await sequelize.query('ALTER TABLE "service_requests" ADD COLUMN IF NOT EXISTS "completed_by_auxiliary_name" VARCHAR(255);');
+        await sequelize.query('ALTER TABLE "service_requests" ADD COLUMN IF NOT EXISTS "completed_at" TIMESTAMP;');
+        await sequelize.query('ALTER TABLE "service_requests" ADD COLUMN IF NOT EXISTS "auxiliary_report" JSON;');
 
         console.log('✅ Columnas añadidas (si no existían).');
 

@@ -27,10 +27,9 @@ Role.init(
             autoIncrement: true,
             primaryKey: true,
         },
-        name: { // Nombre del rol, debe ser uno de los valores definidos en el enum UserRole
-            type: DataTypes.ENUM(...Object.values(UserRole)),
-            allowNull: false,
-            comment: 'Nombre unico del rol ',
+       name: { 
+    type: DataTypes.ENUM(...Object.values(UserRole)),
+    allowNull: false,
         },
 
         description: {

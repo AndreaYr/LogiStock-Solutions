@@ -1,5 +1,6 @@
 import { Op } from "sequelize";
 import { ServiceRequestRepository } from "../repositories/serviceRequestRepositories.js";
+import { MovementRepository } from "../repositories/movementRepositories.js";
 import { Rental, Warehouse, User } from "../models/index.js";
 import { UserRole } from "../interfaces/interfaces.js";
 import { ServiceRequestType, ServiceRequestStatus } from "../interfaces/serviceRequestInterfaces.js";
@@ -8,6 +9,7 @@ import notificationService from './notificationService.js';
 const MAX_REQUESTS_PER_DAY = 3;
 
 const serviceRequestRepo = new ServiceRequestRepository();
+const movementRepo = new MovementRepository();
 
 export class ServiceRequestService {
     /**
@@ -15,9 +17,17 @@ export class ServiceRequestService {
      * Opcional: filtrar por status.
      */
     async listMyRequests(userId: number, status?: string) {
-        const filters: any = {};
-        if (status) filters.status = status;
-        return await serviceRequestRepo.findByUser(userId, filters);
+        try {
+            console.log('[listMyRequests] userId:', userId, 'status:', status);
+            const filters: any = {};
+            if (status) filters.status = status;
+            const requests = await serviceRequestRepo.findByUser(userId, filters);
+            console.log('[listMyRequests] Found requests:', requests.length);
+            return requests;
+        } catch (err: any) {
+            console.error('[listMyRequests] Error:', err.message, err.stack);
+            throw err;
+        }
     }
 
     /**
@@ -57,7 +67,15 @@ export class ServiceRequestService {
      */
     async listAllRequests(status?: string) {
         const filters: any = {};
-        if (status) filters.status = status;
+        // Soportar múltiples estados separados por coma: "APPROVED,COMPLETED"
+        if (status) {
+            const statusList = status.split(',').map(s => s.trim());
+            if (statusList.length > 1) {
+                filters.status = { [Op.in]: statusList };
+            } else {
+                filters.status = status;
+            }
+        }
         console.log('listAllRequests - filters:', filters);
         const requests = await serviceRequestRepo.findAll(filters);
         console.log('listAllRequests - encontradas:', requests.length, 'solicitudes');
@@ -282,7 +300,12 @@ export class ServiceRequestService {
      * Obtener una solicitud específica por ID.
      */
     async getRequestById(requestId: number) {
-        const request = await serviceRequestRepo.findById(requestId);
+        const request = await serviceRequestRepo.findById(requestId, {
+            include: [
+                { model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email'] },
+                { model: Warehouse, as: 'warehouse', attributes: ['id', 'name', 'description'] }
+            ]
+        });
         if (!request) {
             throw new Error('Solicitud no encontrada');
         }
@@ -322,5 +345,192 @@ export class ServiceRequestService {
         ).catch(console.error);
 
         return await serviceRequestRepo.findById(requestId);
+    }
+
+    /**
+     * Auxiliar envía reporte de completación de orden.
+     * Guarda el reporte en auxiliaryReport (JSON) y marca la orden con el auxiliar que la completó.
+     */
+    async submitReport(requestId: number, auxiliaryId: number, reportData: any) {
+        const request = await serviceRequestRepo.findById(requestId);
+        if (!request) {
+            throw new Error('Solicitud no encontrada');
+        }
+
+        if (request.status !== ServiceRequestStatus.APPROVED) {
+            throw new Error('Solo se puede enviar reporte de órdenes aprobadas');
+        }
+
+        const auxiliary = await User.findByPk(auxiliaryId);
+        if (!auxiliary) {
+            throw new Error('Auxiliar no encontrado');
+        }
+
+        // Actualizar con el reporte, información del auxiliar y cambiar estado a COMPLETED
+        const updateData: any = {
+            status: ServiceRequestStatus.COMPLETED,
+            auxiliaryReport: reportData,
+            assignedAuxiliaryId: auxiliaryId,
+            completedByAuxiliaryId: auxiliaryId,
+            completedByAuxiliaryName: `${auxiliary.firstName} ${auxiliary.lastName}`,
+            completedAt: new Date(),
+        };
+
+        await serviceRequestRepo.update(requestId, updateData);
+        const updated = await serviceRequestRepo.findById(requestId, {
+            include: [
+                { model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email'] },
+                { model: Warehouse, as: 'warehouse', attributes: ['id', 'name', 'description'] }
+            ]
+        });
+
+        console.log(`[ServiceRequestService] Reporte enviado por auxiliar (userId=${auxiliaryId}) para orden #${requestId}. Estado cambiado a COMPLETED`);
+
+        // Notificar al Jefe de Bodega que hay un reporte para revisar
+        try {
+            const typeLabel = updated?.type === 'INBOUND' ? 'Entrada' : updated?.type === 'OUTBOUND' ? 'Salida' : updated?.type || 'Solicitud';
+            const warehouseName = (updated as any)?.warehouse?.name || 'Bodega desconocida';
+            const productInfo = updated?.product ? ` de ${updated.product}` : '';
+            
+            // Buscar jefes de bodega para notificar
+            const bosses = await User.findAll({
+                where: { role: 'jefe_bodega' }
+            });
+            
+            for (const boss of bosses) {
+                await notificationService.create(
+                    boss.id,
+                    'system',
+                    `📋 Reporte listo para revisar - ${typeLabel}`,
+                    `El auxiliar ${auxiliary.firstName} ${auxiliary.lastName} completó la orden de ${typeLabel}${productInfo} en ${warehouseName}. Por favor, revisa y valida.`
+                );
+            }
+        } catch (err) {
+            console.error(`[ServiceRequestService] Error notificando a jefes:`, err);
+        }
+
+        return updated;
+    }
+
+    /**
+     * Jefe de bodega revisa y aprueba el reporte del auxiliar.
+     * La orden ya estará en COMPLETED cuando el auxiliar envía el reporte.
+     * El Jefe solo revisa, valida y crea el Movement automáticamente.
+     */
+    async reviewAndApproveReport(requestId: number, jefeId: number, approvalNotes?: string) {
+        const request = await serviceRequestRepo.findById(requestId, {
+            include: [
+                { model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email'] },
+                { model: Warehouse, as: 'warehouse', attributes: ['id', 'name', 'description'] }
+            ]
+        });
+        if (!request) {
+            throw new Error('Solicitud no encontrada');
+        }
+
+        if (request.status !== ServiceRequestStatus.COMPLETED || !request.auxiliaryReport) {
+            throw new Error('Solo se pueden revisar órdenes que ya tienen reporte del auxiliar');
+        }
+
+        const jefe = await User.findByPk(jefeId);
+        if (!jefe) {
+            throw new Error('Jefe de bodega no encontrado');
+        }
+
+        // Marcar como APPROVED_BY_JEFE (orden completada y aprobada por el jefe)
+        const updateData: any = {
+            status: ServiceRequestStatus.APPROVED_BY_JEFE,
+        };
+        if (approvalNotes) {
+            updateData.auxiliaryReport = {
+                ...request.auxiliaryReport,
+                approvalNotes,
+                approvedAt: new Date(),
+                approvedByJefe: `${jefe.firstName} ${jefe.lastName}`,
+            };
+        }
+
+        await serviceRequestRepo.update(requestId, updateData);
+        const completed = await serviceRequestRepo.findById(requestId, {
+            include: [
+                { model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email'] },
+                { model: Warehouse, as: 'warehouse', attributes: ['id', 'name', 'description'] }
+            ]
+        });
+
+        // Crear Movement basado en el reporte del auxiliar
+        try {
+            const movementType = request.type === ServiceRequestType.INBOUND ? 'ENTRADA' : 'SALIDA';
+            
+            // Calcular cantidad procesada del reporte
+            const report = request.auxiliaryReport;
+            const quantityProcessed = report.quantityProcessed || request.quantity || 0;
+            
+            // Observaciones del auxiliar + notas de aprobación del jefe
+            const observations = [
+                report.observations ? `Auxiliar: ${report.observations}` : '',
+                approvalNotes ? `Jefe: ${approvalNotes}` : ''
+            ].filter(o => o).join('\n');
+
+            const warehouseName = (completed as any)?.warehouse?.name || 'Bodega desconocida';
+
+            await movementRepo.create({
+                warehouseId: request.warehouseId,
+                userId: request.completedByAuxiliaryId || request.userId,
+                type: movementType,
+                product: request.product || 'Producto',
+                quantity: quantityProcessed,
+                description: null,
+                serviceRequestId: requestId,
+                photos: report.photos || [],
+                observations: observations || null,
+            });
+
+            console.log(`[ServiceRequestService] Movement creado para orden #${requestId}`);
+        } catch (err) {
+            console.error(`[ServiceRequestService] Error creando Movement:`, err);
+            // No lanzar error, solo registrar
+        }
+
+        // Información para notificaciones
+        const warehouseName = (request as any).warehouse?.name
+            ?? (request as any).warehouse?.description
+            ?? `Bodega #${request.warehouseId}`;
+        const typeLabel = request.type === ServiceRequestType.INBOUND ? 'Entrada'
+            : request.type === ServiceRequestType.OUTBOUND ? 'Salida'
+            : 'Cancelación';
+        const productInfo = request.product ? ` de "${request.product}"` : '';
+
+        // Notificar al cliente
+        console.log(`[ServiceRequestService] Notificando al CLIENTE (userId=${request.userId})`);
+        try {
+            await notificationService.create(
+                request.userId,
+                'system',
+                `✓ Solicitud de ${typeLabel} completada`,
+                `Tu solicitud de ${typeLabel}${productInfo} en ${warehouseName} ha sido completada exitosamente por ${request.completedByAuxiliaryName}.`
+            );
+        } catch (err) {
+            console.error(`[ServiceRequestService] Error notificando al cliente:`, err);
+        }
+
+        // Notificar al auxiliar que su reporte fue aprobado
+        if (request.completedByAuxiliaryId) {
+            console.log(`[ServiceRequestService] Notificando al AUXILIAR (userId=${request.completedByAuxiliaryId})`);
+            try {
+                await notificationService.create(
+                    request.completedByAuxiliaryId,
+                    'system',
+                    `✓ Tu reporte fue aprobado`,
+                    `El reporte de tu orden de ${typeLabel}${productInfo} en ${warehouseName} ha sido revisado y aprobado por el jefe de bodega.`
+                );
+            } catch (err) {
+                console.error(`[ServiceRequestService] Error notificando al auxiliar:`, err);
+            }
+        }
+
+        console.log(`[ServiceRequestService] Orden #${requestId} marcada como COMPLETED por jefe (userId=${jefeId})`);
+
+        return completed;
     }
 }

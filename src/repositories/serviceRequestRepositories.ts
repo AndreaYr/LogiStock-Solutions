@@ -23,17 +23,25 @@ export class ServiceRequestRepository extends BaseRepository<ServiceRequest> {
     }
 
     async findByUser(userId: number, filters: any = {}) {
-        return await ServiceRequest.findAll({
-            where: {
-                userId,
-                ...filters
-            },
-            include: [
-                { model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email'] },
-                { model: Warehouse, as: 'warehouse', attributes: ['id', 'name', 'description'] }
-            ],
-            order: [['createdAt', 'DESC']]
-        });
+        try {
+            console.log('[findByUser] userId:', userId, 'filters:', filters);
+            const result = await ServiceRequest.findAll({
+                where: {
+                    userId,
+                    ...filters
+                },
+                include: [
+                    { model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email'] },
+                    { model: Warehouse, as: 'warehouse', attributes: ['id', 'name', 'description'] }
+                ],
+                order: [['createdAt', 'DESC']]
+            });
+            console.log('[findByUser] Found:', result.length, 'records');
+            return result;
+        } catch (err: any) {
+            console.error('[findByUser] Error:', err.message, err.stack);
+            throw err;
+        }
     }
 
     /** Listar todas las solicitudes (admin/jefe_bodega), opcionalmente filtrar por status */
