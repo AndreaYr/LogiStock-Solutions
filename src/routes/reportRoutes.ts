@@ -18,9 +18,9 @@ router.get('/movements-period', authorize(UserRole.ADMIN, UserRole.JEFE_BODEGA),
 /**
  * GET /api/reports/warehouse-occupancy
  * Obtener ocupación actual de una bodega
- * Roles permitidos: admin, jefe_bodega
+ * Roles permitidos: admin, jefe_bodega, cliente
  */
-router.get('/warehouse-occupancy', authorize(UserRole.ADMIN, UserRole.JEFE_BODEGA), ReportController.getWarehouseOccupancy);
+router.get('/warehouse-occupancy', authorize(UserRole.ADMIN, UserRole.JEFE_BODEGA, UserRole.CLIENTE), ReportController.getWarehouseOccupancy);
 
 /**
  * GET /api/reports/service-request-tracking/:requestId

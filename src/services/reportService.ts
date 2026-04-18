@@ -56,6 +56,9 @@ export class ReportService {
         const totalExits = exits.reduce((sum, m) => sum + m.quantity, 0);
         const currentOccupancy = totalEntries - totalExits;
 
+        // Usar usableArea, si no existe usar area, si no existe usar 0
+        const areaToUse = warehouse.usableArea ?? (warehouse as any).area ?? 0;
+
         return {
             warehouse: {
                 id: warehouse.id,
@@ -64,7 +67,7 @@ export class ReportService {
             totalEntries,
             totalExits,
             currentOccupancy,
-            percentage: warehouse.usableArea ? (currentOccupancy / warehouse.usableArea) * 100 : 'N/A'
+            percentage: areaToUse ? (currentOccupancy / areaToUse) * 100 : 'N/A'
         };
     }
 
