@@ -113,6 +113,42 @@ class UserService {
         if (!user) throw new Error('Usuario no encontrado.');
         await userRepo.update(id, { isActive: false });
     }
+
+    /** Cancela la suscripción del usuario: inactivo con fecha de cancelación (30 días de gracia) */
+    async cancelSubscription(id: number) {
+        const user = await userRepo.findById(id);
+        if (!user) throw new Error('Usuario no encontrado.');
+        if (user.isAnonymized) throw new Error('Esta cuenta ya fue eliminada definitivamente.');
+        await userRepo.update(id, { isActive: false, cancellationDate: new Date() } as any);
+    }
+
+    /** Reactiva la cuenta dentro del período de gracia de 30 días */
+    async recoverAccount(email: string, password: string) {
+        const user = await userRepo.findByEmail(email);
+        if (!user || user.isAnonymized) throw new Error('No se encontró una cuenta con ese correo.');
+        if (!user.cancellationDate) throw new Error('Esta cuenta no está en proceso de cancelación.');
+
+        const GRACE_DAYS = 30;
+        const daysSince = Math.floor((Date.now() - user.cancellationDate.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysSince >= GRACE_DAYS) throw new Error('El período de recuperación ha expirado.');
+
+        const valid = await bcrypt.compare(password, user.password);
+        if (!valid) throw new Error('Contraseña incorrecta.');
+
+        await userRepo.update(user.id, { isActive: true, cancellationDate: null } as any);
+    }
+
+    /** Anonimiza los datos del usuario de forma definitiva (sin posibilidad de recuperación) */
+    async deleteAccountPermanently(email: string, password: string) {
+        const user = await userRepo.findByEmail(email);
+        if (!user || user.isAnonymized) throw new Error('No se encontró una cuenta con ese correo.');
+        if (!user.cancellationDate) throw new Error('Esta cuenta no está en proceso de cancelación.');
+
+        const valid = await bcrypt.compare(password, user.password);
+        if (!valid) throw new Error('Contraseña incorrecta.');
+
+        await userRepo.anonymize(user.id);
+    }
 }
 
 export default new UserService();

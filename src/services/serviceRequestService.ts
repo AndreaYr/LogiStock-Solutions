@@ -394,7 +394,7 @@ export class ServiceRequestService {
             
             // Buscar jefes de bodega para notificar
             const bosses = await User.findAll({
-                where: { role: 'jefe_bodega' }
+                where: { role: 'jefe_bodega' } as any
             });
             
             for (const boss of bosses) {

@@ -24,6 +24,7 @@ router.use(authenticate);
 router.get('/',                         authorize(UserRole.ADMIN, UserRole.JEFE_BODEGA),                       UserController.findAll);
 router.post('/',                        authorize(UserRole.ADMIN),                                            UserController.create);
 router.get('/me',                                                                         UserController.me);
+router.post('/me/cancel',                                                                 UserController.cancelSubscription);
 router.get('/:id',                                                                        UserController.findById);
 router.put('/:id',                                                                        UserController.updateProfile);
 router.patch('/:id/password',                                                             UserController.changePassword);

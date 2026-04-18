@@ -68,12 +68,14 @@ export interface IUserAttributes {
     isActive: boolean;      // Si la cuenta está activa o deshabilitada
     isVerified: boolean;    // Si el email fue verificado
     lastLogin: Date | null; // Ultima vez que inició sesión
+    cancellationDate: Date | null; // Fecha en que el usuario canceló su suscripción
+    isAnonymized: boolean;         // True cuando los datos fueron anonimizados definitivamente
     createdAt?: Date;
     updatedAt?: Date;
 }
 
 // Atributos opcionales al crear un User: id, phone, lastLogin, campos de verificación de email y OTP
-export interface IUserCreationAttributes extends Optional<IUserAttributes, 'id' | 'phone' | 'lastLogin' | 'emailVerificationToken' | 'emailVerificationExpires' | 'otpCode' | 'otpExpires'> { }
+export interface IUserCreationAttributes extends Optional<IUserAttributes, 'id' | 'phone' | 'lastLogin' | 'emailVerificationToken' | 'emailVerificationExpires' | 'otpCode' | 'otpExpires' | 'cancellationDate' | 'isAnonymized'> { }
 
 // Interface final del modelo User
 export interface IUser extends Model<IUserAttributes, IUserCreationAttributes>, IUserAttributes { }

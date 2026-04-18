@@ -5,6 +5,7 @@
 
 import { Request, Response } from 'express';
 import authService from '../services/authService.js';
+import userService from '../services/userService.js';
 import { env } from '../config/env.js';
 
 export const AuthController = {
@@ -49,6 +50,16 @@ export const AuthController = {
             res.status(200).json({ message, ...result });
         } catch (err: any) {
             console.error('[AuthController] ❌ ERROR EN LOGIN:', err);
+
+            if (err.code === 'ACCOUNT_CANCELLED') {
+                res.status(403).json({
+                    code: 'ACCOUNT_CANCELLED',
+                    daysRemaining: err.daysRemaining,
+                    message: 'Cuenta cancelada.',
+                });
+                return;
+            }
+
             const status =
                 err.message?.includes('Credenciales') ||
                 err.message?.includes('bloqueada') ||
@@ -175,6 +186,38 @@ export const AuthController = {
         } catch (err: any) {
             const msg = encodeURIComponent(err.message ?? 'Token inválido o expirado');
             res.redirect(`${appUrl}/verify-email?error=${msg}`);
+        }
+    },
+
+    /** POST /api/auth/recover-account → reactiva una cuenta cancelada (sin JWT) */
+    async recoverAccount(req: Request, res: Response): Promise<void> {
+        try {
+            const { email, password } = req.body;
+            if (!email || !password) {
+                res.status(400).json({ message: 'email y password son requeridos.' });
+                return;
+            }
+            await userService.recoverAccount(email, password);
+            res.status(200).json({ message: 'Cuenta recuperada exitosamente. Ya puedes iniciar sesión.' });
+        } catch (err: any) {
+            const status = err.message.includes('incorrecta') ? 401 : 400;
+            res.status(status).json({ message: err.message });
+        }
+    },
+
+    /** POST /api/auth/delete-permanently → anonimiza la cuenta definitivamente (sin JWT) */
+    async deleteAccountPermanently(req: Request, res: Response): Promise<void> {
+        try {
+            const { email, password } = req.body;
+            if (!email || !password) {
+                res.status(400).json({ message: 'email y password son requeridos.' });
+                return;
+            }
+            await userService.deleteAccountPermanently(email, password);
+            res.status(200).json({ message: 'Cuenta eliminada definitivamente.' });
+        } catch (err: any) {
+            const status = err.message.includes('incorrecta') ? 401 : 400;
+            res.status(status).json({ message: err.message });
         }
     },
 };

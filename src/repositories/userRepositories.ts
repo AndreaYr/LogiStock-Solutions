@@ -64,12 +64,33 @@ export class UserRepository extends BaseRepository<User> {
         );
     }
 
-    /**Bloquea la cuenta del usuario poniendo isActive = false
-     * Se llama cuando los intentos fallido superan el MAX_LOGIN_ATTEMPTS
-     */
     async lockAccount(userId: number): Promise<void> {
         await this.model.update(
             { isActive: false },
+            { where: { id: userId } }
+        );
+    }
+
+    async anonymize(userId: number): Promise<void> {
+        const crypto = await import('crypto');
+        const randomSuffix = crypto.default.randomBytes(8).toString('hex');
+        await this.model.update(
+            {
+                firstName: 'Eliminado',
+                lastName: '',
+                phone: null,
+                email: `deleted_${userId}_${randomSuffix}@anonymized.logistock.com`,
+                password: await (await import('bcryptjs')).default.hash(crypto.default.randomBytes(32).toString('hex'), 10),
+                resetPasswordToken: null,
+                resetPasswordExpires: null,
+                emailVerificationToken: null,
+                emailVerificationExpires: null,
+                otpCode: null,
+                otpExpires: null,
+                isActive: false,
+                isAnonymized: true,
+                cancellationDate: null,
+            } as any,
             { where: { id: userId } }
         );
     }
