@@ -7,6 +7,8 @@ import './models/index.js';
 import apiRoutes from './routes/index.js';
 
 import { securityHeaders, corsConfig, rateLimiter } from './middlewares/securityMiddleware.js';
+import { metricsMiddleware } from './middlewares/metricsMiddleware.js';
+import { register } from './config/metrics.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -25,6 +27,7 @@ app.use((req, res, next) => {
 
 app.use(securityHeaders);
 app.use(corsConfig);
+app.use(metricsMiddleware);
 app.use('/api', rateLimiter); // Limitar peticiones a las rutas de la API
 
 app.use(express.json({ limit: '10mb' }));
@@ -39,6 +42,12 @@ app.use('/api', apiRoutes);
 // Health check
 app.get('/health', (_req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Métricas para Prometheus (sin autenticación — solo acceso interno)
+app.get('/metrics', async (_req, res) => {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
 });
 
 // conecta a la base de datos y luego inicia el servidor

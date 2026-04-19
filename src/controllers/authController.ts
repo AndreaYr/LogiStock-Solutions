@@ -6,6 +6,8 @@
 import { Request, Response } from 'express';
 import authService from '../services/authService.js';
 import userService from '../services/userService.js';
+import auditService from '../services/auditService.js';
+import { loginAttemptsTotal } from '../config/metrics.js';
 import { env } from '../config/env.js';
 
 export const AuthController = {
@@ -21,6 +23,7 @@ export const AuthController = {
             }
 
             await authService.register({ firstName, lastName, email, password, phone });
+            auditService.logUser({ action: 'REGISTER', req });
             res.status(201).json({ message: 'Cuenta creada. Revisa tu correo para verificar tu cuenta.' });
         } catch (err: any) {
             const status = err.message.includes('ya está registrado') ? 409 : 500;
@@ -46,11 +49,13 @@ export const AuthController = {
             const userAgent = req.headers['user-agent'];
 
             const result = await authService.login({ email, password, ipAddress, userAgent });
+            loginAttemptsTotal.inc({ success: 'true' });
             const message = result.otpRequired ? 'Código de verificación enviado a tu correo.' : 'Sesión iniciada correctamente (Modo Local).';
             res.status(200).json({ message, ...result });
         } catch (err: any) {
             console.error('[AuthController] ❌ ERROR EN LOGIN:', err);
 
+            loginAttemptsTotal.inc({ success: 'false' });
             if (err.code === 'ACCOUNT_CANCELLED') {
                 res.status(403).json({
                     code: 'ACCOUNT_CANCELLED',
@@ -198,6 +203,7 @@ export const AuthController = {
                 return;
             }
             await userService.recoverAccount(email, password);
+            auditService.logUser({ action: 'RECOVER', req });
             res.status(200).json({ message: 'Cuenta recuperada exitosamente. Ya puedes iniciar sesión.' });
         } catch (err: any) {
             const status = err.message.includes('incorrecta') ? 401 : 400;
@@ -214,6 +220,7 @@ export const AuthController = {
                 return;
             }
             await userService.deleteAccountPermanently(email, password);
+            auditService.logUser({ action: 'ANONYMIZE', req });
             res.status(200).json({ message: 'Cuenta eliminada definitivamente.' });
         } catch (err: any) {
             const status = err.message.includes('incorrecta') ? 401 : 400;

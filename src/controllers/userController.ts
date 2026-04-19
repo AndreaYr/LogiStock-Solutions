@@ -6,6 +6,7 @@
 
 import { Request, Response } from 'express';
 import userService from '../services/userService.js';
+import auditService from '../services/auditService.js';
 
 export const UserController = {
 
@@ -68,6 +69,7 @@ export const UserController = {
 
             const { firstName, lastName, phone } = req.body;
             const updated = await userService.updateProfile(id, { firstName, lastName, phone });
+            auditService.logUser({ userId: id, changedBy: req.user!.userId, action: 'UPDATE_PROFILE', changes: { firstName, lastName, phone }, req });
             res.status(200).json({ message: 'Perfil actualizado.', user: updated });
         } catch (err: any) {
             const status = err.message.includes('no encontrado') ? 404 : 500;
@@ -92,6 +94,7 @@ export const UserController = {
             }
 
             await userService.changePassword(id, { currentPassword, newPassword });
+            auditService.logUser({ userId: id, changedBy: id, action: 'CHANGE_PASSWORD', req });
             res.status(200).json({ message: 'Contraseña actualizada exitosamente.' });
         } catch (err: any) {
             const status = err.message.includes('incorrecta') ? 400 : 500;
@@ -120,6 +123,7 @@ export const UserController = {
         try {
             const id = parseInt(String(req.params.id), 10);
             await userService.deactivate(id);
+            auditService.logUser({ userId: id, changedBy: req.user!.userId, action: 'DEACTIVATE', req });
             res.status(200).json({ message: 'Cuenta desactivada.' });
         } catch (err: any) {
             const status = err.message.includes('no encontrado') ? 404 : 500;
@@ -130,7 +134,9 @@ export const UserController = {
     /** POST /api/users/me/cancel  → el usuario cancela su propia suscripción */
     async cancelSubscription(req: Request, res: Response): Promise<void> {
         try {
-            await userService.cancelSubscription(req.user!.userId);
+            const uid = req.user!.userId;
+            await userService.cancelSubscription(uid);
+            auditService.logUser({ userId: uid, changedBy: uid, action: 'CANCEL', req });
             res.status(200).json({ message: 'Suscripción cancelada.' });
         } catch (err: any) {
             res.status(400).json({ message: err.message });

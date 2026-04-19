@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { ServiceRequestService } from '../services/serviceRequestService.js';
 import { ServiceRequestStatus, ServiceRequestType } from '../interfaces/serviceRequestInterfaces.js';
+import auditService from '../services/auditService.js';
+import { serviceRequestsTotal } from '../config/metrics.js';
 
 const serviceRequestService = new ServiceRequestService();
 
@@ -86,6 +88,8 @@ export class ServiceRequestController {
                 scheduledDate,
                 scheduledTime,
             });
+            auditService.logServiceRequest({ requestId: (newRequest as any).id, changedBy: userId, action: 'CREATE', newStatus: 'PENDING' });
+            serviceRequestsTotal.inc({ type });
             res.status(201).json(newRequest);
         } catch (err: any) {
             res.status(400).json({ message: err.message });
@@ -111,6 +115,7 @@ export class ServiceRequestController {
                 assignedAuxiliaryId,
                 updatedByUserId
             );
+            auditService.logServiceRequest({ requestId: Number(id), changedBy: updatedByUserId, action: 'STATUS_CHANGE', newStatus: status, reason: rejectionReason });
             res.status(200).json(updatedRequest);
         } catch (err: any) {
             res.status(400).json({ message: err.message });
@@ -129,6 +134,7 @@ export class ServiceRequestController {
             }
 
             const updated = await serviceRequestService.assignAuxiliary(Number(id), Number(auxiliaryId));
+            auditService.logServiceRequest({ requestId: Number(id), changedBy: req.user?.userId, action: 'ASSIGN_AUXILIARY', metadata: { auxiliaryId } });
             res.status(200).json(updated);
         } catch (err: any) {
             res.status(400).json({ message: err.message });
@@ -152,6 +158,7 @@ export class ServiceRequestController {
                 auxiliaryId,
                 reportData
             );
+            auditService.logServiceRequest({ requestId: Number(id), changedBy: auxiliaryId, action: 'SUBMIT_REPORT', newStatus: 'COMPLETED' });
             res.status(200).json(updated);
         } catch (err: any) {
             res.status(400).json({ message: err.message });
@@ -175,6 +182,7 @@ export class ServiceRequestController {
                 jefeId,
                 approvalNotes
             );
+            auditService.logServiceRequest({ requestId: Number(id), changedBy: jefeId, action: 'REVIEW_APPROVE', newStatus: 'APPROVED_BY_JEFE', metadata: { approvalNotes } });
             res.status(200).json(updated);
         } catch (err: any) {
             res.status(400).json({ message: err.message });

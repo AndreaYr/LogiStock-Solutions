@@ -5,6 +5,8 @@ import { WarehouseRepository } from '../repositories/warehouseRepositories.js';
 import Warehouse from '../models/warehouseModel.js';
 import Rental from '../models/rentalModel.js';
 import { env } from '../config/env.js';
+import auditService from '../services/auditService.js';
+import { warehouseOperationsTotal } from '../config/metrics.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const warehouseRepo = new WarehouseRepository();
@@ -103,6 +105,8 @@ export const WarehouseController = {
         try {
             const code = await generateUniqueCode();
             const warehouse = await warehouseRepo.create({ ...req.body, code });
+            auditService.logWarehouse({ warehouseId: (warehouse as any).id, changedBy: req.user?.userId, action: 'CREATE', changes: req.body });
+            warehouseOperationsTotal.inc({ action: 'CREATE' });
             res.status(201).json(toFrontendFormat(warehouse));
         } catch (err: any) {
             res.status(500).json({ message: err.message });
@@ -116,8 +120,10 @@ export const WarehouseController = {
             if (isNaN(id)) { res.status(400).json({ message: 'ID inválido.' }); return; }
             const warehouse = await warehouseRepo.findById(id);
             if (!warehouse) { res.status(404).json({ message: 'Bodega no encontrada.' }); return; }
+            const before = { ...(warehouse as any).dataValues };
             await warehouseRepo.update(id, req.body);
             const updated = await warehouseRepo.findById(id);
+            auditService.logWarehouse({ warehouseId: id, changedBy: req.user?.userId, action: 'UPDATE', changes: { before, after: req.body } });
             const activeRental = await Rental.findOne({ where: { warehouseId: id, status: 'ACTIVE' } });
             res.status(200).json(toFrontendFormat(updated, !!activeRental));
         } catch (err: any) {
@@ -134,6 +140,8 @@ export const WarehouseController = {
             if (!warehouse) { res.status(404).json({ message: 'Bodega no encontrada.' }); return; }
             const newStatus = !(warehouse as any).isAvailable;
             await warehouseRepo.update(id, { isAvailable: newStatus } as any);
+            auditService.logWarehouse({ warehouseId: id, changedBy: req.user?.userId, action: 'TOGGLE_STATUS', changes: { isAvailable: newStatus } });
+            warehouseOperationsTotal.inc({ action: 'TOGGLE_STATUS' });
             const updated = await warehouseRepo.findById(id);
             const activeRental = await Rental.findOne({ where: { warehouseId: id, status: 'ACTIVE' } });
             res.status(200).json(toFrontendFormat(updated, !!activeRental));
@@ -160,6 +168,7 @@ export const WarehouseController = {
             const existing: string[] = Array.isArray(raw) ? raw : (raw ? [raw] : []);
             const merged = [...existing, ...newUrls];
             await warehouseRepo.update(id, { imageUrl: merged } as any);
+            auditService.logWarehouse({ warehouseId: id, changedBy: req.user?.userId, action: 'UPLOAD_IMAGES', changes: { addedImages: newUrls.length } });
             const updated = await warehouseRepo.findById(id);
             res.status(200).json(toFrontendFormat(updated));
         } catch (err: any) {

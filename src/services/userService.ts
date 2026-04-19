@@ -82,7 +82,8 @@ class UserService {
         if (existing) throw new Error('El email ya está registrado.');
 
         const hashed = await bcrypt.hash(dto.password, 12);
-        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const rawVerificationToken    = crypto.randomBytes(32).toString('hex');
+        const hashedVerificationToken = crypto.createHash('sha256').update(rawVerificationToken).digest('hex');
         const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
 
         const user = await userRepo.create({
@@ -92,16 +93,16 @@ class UserService {
             password: hashed,
             phone: dto.phone ?? null,
             roleId: dto.roleId,
-            isActive: false,
+            isActive: true,
             isVerified: false,
             lastLogin: null,
             resetPasswordToken: null,
             resetPasswordExpires: null,
-            emailVerificationToken: verificationToken,
+            emailVerificationToken: hashedVerificationToken,
             emailVerificationExpires: verificationExpires,
         });
 
-        await sendVerificationEmail(dto.email, dto.firstName, verificationToken);
+        await sendVerificationEmail(dto.email, dto.firstName, rawVerificationToken);
 
         const { password: _, ...safe } = user.toJSON() as any;
         return safe;

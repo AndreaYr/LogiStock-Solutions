@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { NoveltyService } from '../services/noveltyService.js';
 import { NoveltyStatus } from '../interfaces/noveltyInterfaces.js';
+import auditService from '../services/auditService.js';
+import { noveltyReportsTotal } from '../config/metrics.js';
 
 const noveltyService = new NoveltyService();
 
@@ -32,6 +34,8 @@ export class NoveltyController {
             const userId = req.user!.userId;
             const { photos } = req.body;
             const novelty = await noveltyService.createNovelty(userId, req.body, photos);
+            auditService.logNovelty({ noveltyId: (novelty as any).id, changedBy: userId, action: 'CREATE', newStatus: 'PENDING' });
+            noveltyReportsTotal.inc();
             res.status(201).json(novelty);
         } catch (err: any) {
             res.status(400).json({ message: err.message });
@@ -50,6 +54,7 @@ export class NoveltyController {
             }
 
             const updatedNovelty = await noveltyService.updateStatus(Number(id), status as NoveltyStatus);
+            auditService.logNovelty({ noveltyId: Number(id), changedBy: req.user?.userId, action: 'UPDATE_STATUS', newStatus: status });
             res.status(200).json(updatedNovelty);
         } catch (err: any) {
             res.status(400).json({ message: err.message });

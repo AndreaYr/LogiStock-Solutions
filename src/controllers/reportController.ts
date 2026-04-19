@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import reportService from '../services/reportService.js';
+import auditService from '../services/auditService.js';
 
 export class ReportController {
     /**
@@ -18,6 +19,7 @@ export class ReportController {
             }
 
             const report = await reportService.getMovementsByPeriod(warehouseId, startDate, endDate);
+            auditService.logReportAccess({ userId: req.user?.userId, reportType: 'MOVEMENTS_PERIOD', params: { warehouseId, startDate, endDate }, req });
             res.status(200).json(report);
         } catch (err: any) {
             res.status(500).json({ message: err.message });
@@ -38,6 +40,7 @@ export class ReportController {
             }
 
             const occupancy = await reportService.getWarehouseOccupancy(warehouseId);
+            auditService.logReportAccess({ userId: req.user?.userId, reportType: 'WAREHOUSE_OCCUPANCY', params: { warehouseId }, req });
             res.status(200).json(occupancy);
         } catch (err: any) {
             res.status(500).json({ message: err.message });
@@ -58,6 +61,7 @@ export class ReportController {
             }
 
             const tracking = await reportService.getServiceRequestTracking(Number(requestId));
+            auditService.logReportAccess({ userId: req.user?.userId, reportType: 'SERVICE_REQUEST_TRACKING', params: { requestId }, req });
             res.status(200).json(tracking);
         } catch (err: any) {
             const status = err.message.includes('no encontrada') ? 404 : 500;
@@ -80,6 +84,7 @@ export class ReportController {
             }
 
             const kpis = await reportService.getWarehouseKPIs(warehouseId, days);
+            auditService.logReportAccess({ userId: req.user?.userId, reportType: 'WAREHOUSE_KPIS', params: { warehouseId, days }, req });
             res.status(200).json(kpis);
         } catch (err: any) {
             res.status(500).json({ message: err.message });
@@ -101,6 +106,7 @@ export class ReportController {
             }
 
             const history = await reportService.getManagerActionHistory(warehouseId, days);
+            auditService.logReportAccess({ userId: req.user?.userId, reportType: 'MANAGER_ACTIONS', params: { warehouseId, days }, req });
             res.status(200).json(history);
         } catch (err: any) {
             res.status(500).json({ message: err.message });
