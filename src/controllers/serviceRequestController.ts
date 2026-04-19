@@ -181,6 +181,33 @@ export class ServiceRequestController {
         }
     }
 
+    /** PATCH /api/service-requests/:id/reject-report → Jefe de bodega rechaza reporte y pide revisión */
+    static async rejectReport(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            const jefeId = req.user?.userId;
+            const { rejectionNotes } = req.body;
+
+            if (!jefeId) {
+                res.status(401).json({ message: 'Usuario no autenticado' });
+                return;
+            }
+            if (!rejectionNotes) {
+                res.status(400).json({ message: 'Se requieren notas de rechazo/revisión' });
+                return;
+            }
+
+            const updated = await serviceRequestService.rejectReport(
+                Number(id),
+                jefeId,
+                rejectionNotes
+            );
+            res.status(200).json(updated);
+        } catch (err: any) {
+            res.status(400).json({ message: err.message });
+        }
+    }
+
     /** GET /api/service-requests/:id */
     static async getById(req: Request, res: Response): Promise<void> {
         try {
