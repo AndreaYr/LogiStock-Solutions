@@ -72,6 +72,7 @@ ChatbotMessage.init(
     sequelize,
     tableName: "chatbot_messages",
     timestamps: true, // Dejar que Sequelize maneje createdAt automáticamente
+    updatedAt: false, // Los mensajes de chat son inmutables, no requieren updatedAt
     underscored: false,
     indexes: [
       // {

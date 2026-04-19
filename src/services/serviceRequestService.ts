@@ -357,8 +357,8 @@ export class ServiceRequestService {
             throw new Error('Solicitud no encontrada');
         }
 
-        if (request.status !== ServiceRequestStatus.APPROVED) {
-            throw new Error('Solo se puede enviar reporte de órdenes aprobadas');
+        if (request.status !== ServiceRequestStatus.APPROVED && request.status !== ServiceRequestStatus.NEEDS_REVISION) {
+            throw new Error('Solo se puede enviar reporte de órdenes aprobadas o que requieren revisión');
         }
 
         const auxiliary = await User.findByPk(auxiliaryId);
@@ -369,13 +369,15 @@ export class ServiceRequestService {
         // Actualizar con el reporte, información del auxiliar y cambiar estado a COMPLETED
         const updateData: any = {
             status: ServiceRequestStatus.COMPLETED,
-            auxiliaryReport: reportData,
+            auxiliaryReport: reportData,  // Sobrescribe el reporte anterior (limpia approvalNotes, approvedAt, etc)
             assignedAuxiliaryId: auxiliaryId,
             completedByAuxiliaryId: auxiliaryId,
             completedByAuxiliaryName: `${auxiliary.firstName} ${auxiliary.lastName}`,
             completedAt: new Date(),
         };
 
+        console.log(`[submitReport] Actualizando orden #${requestId} de status ${request.status} a COMPLETED. auxiliaryReport será sobrescrito.`);
+        
         await serviceRequestRepo.update(requestId, updateData);
         const updated = await serviceRequestRepo.findById(requestId, {
             include: [
@@ -384,7 +386,7 @@ export class ServiceRequestService {
             ]
         });
 
-        console.log(`[ServiceRequestService] Reporte enviado por auxiliar (userId=${auxiliaryId}) para orden #${requestId}. Estado cambiado a COMPLETED`);
+        console.log(`[submitReport] Orden actualizada #${requestId}. Nuevo status: ${updated?.status}, auxiliaryReport keys:`, Object.keys((updated as any)?.auxiliaryReport || {}));
 
         // Notificar al Jefe de Bodega que hay un reporte para revisar
         try {
@@ -532,5 +534,65 @@ export class ServiceRequestService {
         console.log(`[ServiceRequestService] Orden #${requestId} marcada como COMPLETED por jefe (userId=${jefeId})`);
 
         return completed;
+    }
+
+    /**
+     * Jefe de bodega rechaza el reporte del auxiliar y requiere revisión.
+     */
+    async rejectReport(requestId: number, jefeId: number, rejectionNotes: string) {
+        const request = await serviceRequestRepo.findById(requestId, {
+            include: [
+                { model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email'] },
+                { model: Warehouse, as: 'warehouse', attributes: ['id', 'name', 'description'] }
+            ]
+        });
+        if (!request) {
+            throw new Error('Solicitud no encontrada');
+        }
+
+        if (request.status !== ServiceRequestStatus.COMPLETED) {
+            throw new Error('Solo se pueden rechazar órdenes completadas por el auxiliar');
+        }
+
+        const jefe = await User.findByPk(jefeId);
+        if (!jefe) {
+            throw new Error('Jefe de bodega no encontrado');
+        }
+
+        // Devolver a estado NEEDS_REVISION (mantener assignedAuxiliaryId para que aparezca en panel del auxiliar)
+        // Pero limpiar los campos de aprobación previos del auxiliaryReport
+        const cleanedReport = request.auxiliaryReport ? { ...request.auxiliaryReport } : {};
+        delete cleanedReport.approvalNotes;
+        delete cleanedReport.approvedAt;
+        delete cleanedReport.approvedByJefe;
+        
+        const updateData: any = {
+            status: ServiceRequestStatus.NEEDS_REVISION,
+            rejectionReason: rejectionNotes,
+            assignedAuxiliaryId: request.assignedAuxiliaryId, // Preservar el auxiliar asignado
+            auxiliaryReport: cleanedReport // Mantener el reporte anterior pero sin datos de aprobación
+        };
+        
+        console.log(`[rejectReport] Rechazando orden #${requestId}. assignedAuxiliaryId:`, request.assignedAuxiliaryId, 'updateData:', updateData);
+        
+        await serviceRequestRepo.update(requestId, updateData);
+        const updated = await serviceRequestRepo.findById(requestId);
+        
+        console.log(`[rejectReport] Orden actualizada #${requestId}. Nueva orden:`, { status: updated?.status, assignedAuxiliaryId: updated?.assignedAuxiliaryId });
+
+        // Notificar al auxiliar que la orden fue regresada
+        if (request.assignedAuxiliaryId) {
+            const typeLabel = request.type === ServiceRequestType.INBOUND ? 'Ingreso'
+                : request.type === ServiceRequestType.OUTBOUND ? 'Retiro' : 'Orden';
+            const warehouseName = (request as any).warehouse?.name || (request as any).warehouse?.description || 'Bodega';
+            await notificationService.create(
+                request.assignedAuxiliaryId,
+                'system',
+                `⚠️ Revisión requerida en orden de ${typeLabel}`,
+                `El jefe de bodega requiere revisión en tu reporte para ${warehouseName}. Notas: ${rejectionNotes}. Por favor, corrige la orden.`
+            ).catch(console.error);
+        }
+
+        return updated;
     }
 }

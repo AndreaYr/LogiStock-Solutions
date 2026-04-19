@@ -65,4 +65,11 @@ router.patch('/:id/submit-report', authorize(UserRole.AUXILIAR), ServiceRequestC
  */
 router.patch('/:id/review', authorize(UserRole.JEFE_BODEGA, UserRole.ADMIN), ServiceRequestController.reviewAndApproveReport);
 
+/**
+ * Jefe de bodega rechaza el reporte y pide revisión
+ * Roles permitidos: jefe_bodega, admin
+ * Body: { rejectionNotes }
+ */
+router.patch('/:id/reject-report', authorize(UserRole.JEFE_BODEGA, UserRole.ADMIN), ServiceRequestController.rejectReport);
+
 export default router;

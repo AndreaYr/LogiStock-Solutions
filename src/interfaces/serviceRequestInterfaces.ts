@@ -11,6 +11,7 @@ export enum ServiceRequestStatus {
     APPROVED = 'APPROVED',
     REJECTED = 'REJECTED',
     COMPLETED = 'COMPLETED',
+    NEEDS_REVISION = 'NEEDS_REVISION',
     APPROVED_BY_JEFE = 'APPROVED_BY_JEFE'
 }
 
