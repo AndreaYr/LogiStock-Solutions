@@ -28,4 +28,8 @@ router.post('/reset-password', AuthController.resetPassword);
 // Verificación de email (GET con token en query param)
 router.get('/verify-email', AuthController.verifyEmail);
 
+// Gestión de cuentas canceladas (sin JWT — usuario no puede autenticarse)
+router.post('/recover-account', AuthController.recoverAccount);
+router.post('/delete-permanently', AuthController.deleteAccountPermanently);
+
 export default router;

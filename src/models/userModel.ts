@@ -23,6 +23,8 @@ class User extends Model<IUserAttributes, IUserCreationAttributes> implements IU
     declare isActive: boolean;
     declare isVerified: boolean;
     declare lastLogin: Date | null;
+    declare cancellationDate: Date | null;
+    declare isAnonymized: boolean;
     declare readonly createdAt: Date;
     declare readonly updatedAt: Date;
 
@@ -133,12 +135,23 @@ User.init(
             defaultValue: false,
             comment: 'Si el usuario ha verificado su email. Un usuario no verificado no puede iniciar sesión',
         },
-        // Util para detectar cuentas inactivas o para mostrar la última vez que el usuario inició sesión en su perfil.
         lastLogin: {
             type: DataTypes.DATE,
             allowNull: true,
             defaultValue: null,
             comment: 'Fecha y hora del último inicio de sesión del usuario',
+        },
+        cancellationDate: {
+            type: DataTypes.DATE,
+            allowNull: true,
+            defaultValue: null,
+            comment: 'Fecha en que el usuario canceló su suscripción. Null si está activo.',
+        },
+        isAnonymized: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
+            comment: 'True cuando los datos del usuario fueron anonimizados definitivamente.',
         },
     },
     {

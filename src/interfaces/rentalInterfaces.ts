@@ -11,6 +11,7 @@ export interface IRentalAttributes {
     endDate: Date | null;
     monthlyAmount: number;
     status: 'ACTIVE' | 'FINISHED' | 'PENDING_PAYMENT';
+    warehouseCode: string | null;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -18,4 +19,4 @@ export interface IRentalAttributes {
 /**
  * Optional attributes for creation
  */
-export interface IRentalCreationAttributes extends Optional<IRentalAttributes, 'id' | 'endDate' | 'status'> { }
+export interface IRentalCreationAttributes extends Optional<IRentalAttributes, 'id' | 'endDate' | 'status' | 'warehouseCode'> { }

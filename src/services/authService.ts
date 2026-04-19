@@ -119,7 +119,32 @@ class AuthService {
             throw new Error('Credenciales inválidas.');
         }
 
-        if (!user.isActive) throw new Error('La cuenta está desactivada.');
+        if (!user.isActive) {
+            // Cuenta cancelada por el usuario (dentro del período de gracia de 30 días)
+            if (user.cancellationDate && !user.isAnonymized) {
+                const GRACE_DAYS = 30;
+                const daysSince = Math.floor((Date.now() - user.cancellationDate.getTime()) / (1000 * 60 * 60 * 24));
+                const daysRemaining = GRACE_DAYS - daysSince;
+
+                if (daysRemaining > 0) {
+                    const err: any = new Error('ACCOUNT_CANCELLED');
+                    err.code = 'ACCOUNT_CANCELLED';
+                    err.daysRemaining = daysRemaining;
+                    throw err;
+                }
+
+                // Pasaron los 30 días → anonimizar automáticamente
+                await userRepo.anonymize(user.id);
+                throw new Error('La cuenta ha sido eliminada definitivamente.');
+            }
+
+            // Cuenta anonimizada → no revelar nada, tratar como credenciales inválidas
+            if (user.isAnonymized) {
+                throw new Error('Credenciales inválidas.');
+            }
+
+            throw new Error('La cuenta está desactivada.');
+        }
 
         // Bloquear login si el email no ha sido verificado
         if (!user.isVerified) throw new Error('Debes verificar tu email antes de iniciar sesión. Revisa tu bandeja de entrada.');

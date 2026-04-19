@@ -126,4 +126,14 @@ export const UserController = {
             res.status(status).json({ message: err.message });
         }
     },
+
+    /** POST /api/users/me/cancel  → el usuario cancela su propia suscripción */
+    async cancelSubscription(req: Request, res: Response): Promise<void> {
+        try {
+            await userService.cancelSubscription(req.user!.userId);
+            res.status(200).json({ message: 'Suscripción cancelada.' });
+        } catch (err: any) {
+            res.status(400).json({ message: err.message });
+        }
+    },
 };
