@@ -65,3 +65,17 @@ export const noveltyReportsTotal = new Counter({
     help: 'Total de novedades reportadas',
     registers: [register],
 });
+
+export const movementsTotal = new Counter({
+    name: 'logistock_movements_total',
+    help: 'Total de movimientos de inventario registrados',
+    labelNames: ['type'],
+    registers: [register],
+});
+
+export const noveltyResolutionsTotal = new Counter({
+    name: 'logistock_novelty_resolutions_total',
+    help: 'Total de novedades resueltas o actualizadas por estado',
+    labelNames: ['status'],
+    registers: [register],
+});

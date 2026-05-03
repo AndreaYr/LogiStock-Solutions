@@ -124,6 +124,7 @@ export const WarehouseController = {
             await warehouseRepo.update(id, req.body);
             const updated = await warehouseRepo.findById(id);
             auditService.logWarehouse({ warehouseId: id, changedBy: req.user?.userId, action: 'UPDATE', changes: { before, after: req.body } });
+            warehouseOperationsTotal.inc({ action: 'UPDATE' });
             const activeRental = await Rental.findOne({ where: { warehouseId: id, status: 'ACTIVE' } });
             res.status(200).json(toFrontendFormat(updated, !!activeRental));
         } catch (err: any) {
@@ -169,6 +170,7 @@ export const WarehouseController = {
             const merged = [...existing, ...newUrls];
             await warehouseRepo.update(id, { imageUrl: merged } as any);
             auditService.logWarehouse({ warehouseId: id, changedBy: req.user?.userId, action: 'UPLOAD_IMAGES', changes: { addedImages: newUrls.length } });
+            warehouseOperationsTotal.inc({ action: 'UPLOAD_IMAGES' });
             const updated = await warehouseRepo.findById(id);
             res.status(200).json(toFrontendFormat(updated));
         } catch (err: any) {

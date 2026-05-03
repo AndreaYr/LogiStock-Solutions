@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import movementRepo from '../repositories/movementRepositories.js';
 import { WarehouseRepository } from '../repositories/warehouseRepositories.js';
 import notificationService from '../services/notificationService.js';
+import { movementsTotal } from '../config/metrics.js';
 
 const warehouseRepo = new WarehouseRepository();
 
@@ -37,6 +38,8 @@ export const MovementController = {
                 photos: photos ?? [],
                 observations: observations ?? null,
             });
+
+            movementsTotal.inc({ type: type.toLowerCase() });
 
             // Disparar notificación
             const typeInSpanish = type.toLowerCase() as 'entrada' | 'salida' | 'traslado';

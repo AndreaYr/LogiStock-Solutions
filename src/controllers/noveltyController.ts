@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { NoveltyService } from '../services/noveltyService.js';
 import { NoveltyStatus } from '../interfaces/noveltyInterfaces.js';
 import auditService from '../services/auditService.js';
-import { noveltyReportsTotal } from '../config/metrics.js';
+import { noveltyReportsTotal, noveltyResolutionsTotal } from '../config/metrics.js';
 
 const noveltyService = new NoveltyService();
 
@@ -55,6 +55,7 @@ export class NoveltyController {
 
             const updatedNovelty = await noveltyService.updateStatus(Number(id), status as NoveltyStatus);
             auditService.logNovelty({ noveltyId: Number(id), changedBy: req.user?.userId, action: 'UPDATE_STATUS', newStatus: status });
+            noveltyResolutionsTotal.inc({ status });
             res.status(200).json(updatedNovelty);
         } catch (err: any) {
             res.status(400).json({ message: err.message });
