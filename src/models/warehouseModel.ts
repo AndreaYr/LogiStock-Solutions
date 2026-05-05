@@ -64,6 +64,12 @@ export interface IWarehouseAttributes {
     imageUrl: string | null;
     imageUrls?: string[] | null;
     monthlyPrice: number;
+    /** Nivel del complejo donde se encuentra la bodega */
+    nivel: number | null;
+    /** Número de pasillo dentro del nivel */
+    pasillo: number | null;
+    /** Número de bodega dentro del pasillo */
+    numeroBodega: number | null;
 }
 
 // Interface para creación (id y campos con default son opcionales)
@@ -91,6 +97,9 @@ export interface IWarehouseCreationAttributes extends Optional<
     | 'imageUrl'
     | 'monthlyPrice'
     | 'capacityOccupied'
+    | 'nivel'
+    | 'pasillo'
+    | 'numeroBodega'
 > {}
 
 // Interface Final del Modelo
@@ -121,6 +130,9 @@ class Warehouse extends Model<IWarehouseAttributes, IWarehouseCreationAttributes
     declare imageUrl: string | null;
     declare imageUrls?: string[] | null;
     declare monthlyPrice: number;
+    declare nivel: number | null;
+    declare pasillo: number | null;
+    declare numeroBodega: number | null;
 }
 
 Warehouse.init({
@@ -231,6 +243,18 @@ Warehouse.init({
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
         defaultValue: 0,
+    },
+    nivel: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+    },
+    pasillo: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+    },
+    numeroBodega: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
     },
 }, {
     sequelize,

@@ -37,6 +37,7 @@ router.get('/:id',     authenticate, WarehouseController.getById);
 router.post('/',       authenticate, authorize(UserRole.ADMIN), WarehouseController.create);
 router.put('/:id',     authenticate, authorize(UserRole.ADMIN), WarehouseController.update);
 router.patch('/:id/toggle-status', authenticate, authorize(UserRole.ADMIN), WarehouseController.toggleStatus);
+router.delete('/:id',  authenticate, authorize(UserRole.ADMIN), WarehouseController.remove);
 router.post('/:id/images', authenticate, authorize(UserRole.ADMIN), upload.array('images', 10), WarehouseController.uploadImages);
 
 export default router;

@@ -54,6 +54,9 @@ function toFrontendFormat(w: any, isRented = false) {
         precioMensual: Number(w.monthlyPrice ?? 0),
         imageUrl: w.imageUrl ?? null,
         imagenUrl: w.imageUrl ?? null,
+        nivel: w.nivel ?? null,
+        pasillo: w.pasillo ?? null,
+        numeroBodega: w.numeroBodega ?? null,
     };
 }
 
@@ -146,6 +149,22 @@ export const WarehouseController = {
             const updated = await warehouseRepo.findById(id);
             const activeRental = await Rental.findOne({ where: { warehouseId: id, status: 'ACTIVE' } });
             res.status(200).json(toFrontendFormat(updated, !!activeRental));
+        } catch (err: any) {
+            res.status(500).json({ message: err.message });
+        }
+    },
+
+    /** DELETE /api/warehouses/:id → Eliminar bodega (Admin) */
+    async remove(req: Request, res: Response): Promise<void> {
+        try {
+            const id = parseInt(String(req.params.id), 10);
+            if (isNaN(id)) { res.status(400).json({ message: 'ID inválido.' }); return; }
+            const warehouse = await warehouseRepo.findById(id);
+            if (!warehouse) { res.status(404).json({ message: 'Bodega no encontrada.' }); return; }
+            await warehouseRepo.delete(id);
+            auditService.logWarehouse({ warehouseId: id, changedBy: req.user?.userId, action: 'DELETE', changes: {} });
+            warehouseOperationsTotal.inc({ action: 'DELETE' });
+            res.status(200).json({ message: 'Bodega eliminada.' });
         } catch (err: any) {
             res.status(500).json({ message: err.message });
         }
